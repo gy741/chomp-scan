@@ -7,11 +7,11 @@ GREEN='\033[0;32m';
 BLUE='\033[0;34m';
 ORANGE='\033[0;33m';
 
-sudo apt-key adv --keyserver pgp.mit.edu --recv-keys ED444FF07D8D0BF6
-echo '# Kali linux repositories | Added by Katoolin\ndeb http://http.kali.org/kali kali-rolling main contrib non-free' >> /etc/apt/sources.list
-sudo apt-get update -m
+wget -q -O - https://archive.kali.org/archive-key.asc  | apt-key add
+echo 'deb http://http.kali.org/kali kali-rolling main contrib non-free' >> /etc/apt/sources.list
+apt-get update -m
 
-sudo apt-get install unzip git gcc g++ wget curl nmap masscan nikto whatweb wafw00f chromium-browser python-pip python3-pip p7zip-full -y;
+apt-get install unzip git gcc g++ wget curl nmap masscan nikto whatweb wafw00f chromium-browser python-pip python3-pip p7zip-full -y;
 echo -e "$GREEN""Installing Go from golang.org.""$NC";
 wget https://dl.google.com/go/go1.12.linux-amd64.tar.gz;
 sudo tar -C /usr/local -xzf go1.12.linux-amd64.tar.gz;
