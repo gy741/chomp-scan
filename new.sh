@@ -28,7 +28,8 @@ git clone https://github.com/infosec-au/altdns.git ~/bounty/tools/altdns;
 git clone https://github.com/blechschmidt/massdns.git ~/bounty/tools/massdns; 
 cd ~/bounty/tools/massdns; make; # Compiling massdns, see repo for details
 git clone https://github.com/mazen160/bfac.git ~/bounty/tools/bfac;
-
+pip2 install -r requirements2.txt;
+pip3 install -r requirements3.txt
 
 
 
