@@ -11,7 +11,7 @@ wget -q -O - https://archive.kali.org/archive-key.asc  | apt-key add
 echo 'deb http://http.kali.org/kali kali-rolling main contrib non-free' >> /etc/apt/sources.list
 apt-get update -m
 
-apt-get install unzip make git gcc g++ wget curl nmap masscan nikto whatweb wafw00f chromium-browser python-pip python3-pip p7zip-full -y;
+apt-get install sublist3r gobuster unzip make gcc g++ wget curl nmap masscan nikto whatweb wafw00f chromium-browser python-pip python3-pip p7zip-full -y;
 echo -e "$GREEN""Installing Go from golang.org.""$NC";
 wget https://dl.google.com/go/go1.12.linux-amd64.tar.gz;
 sudo tar -C /usr/local -xzf go1.12.linux-amd64.tar.gz;
