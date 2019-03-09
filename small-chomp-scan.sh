@@ -339,26 +339,6 @@ function list_found() {
 		echo -e "$GREEN""[+] Found $(wc -l "$WORKING_DIR"/$ALL_DOMAIN | cut -d ' ' -f 1) unique domains so far.""$NC"
 }
 
-function get_interesting() {
-		while read -r word; do
-				grep "$word" "$WORKING_DIR"/$ALL_DOMAIN >> "$WORKING_DIR"/"$INTERESTING_DOMAINS";
-		done < "$INTERESTING";
-
-		# Make sure no there are duplicates
-		sort -u "$WORKING_DIR"/"$INTERESTING_DOMAINS" > "$WORKING_DIR"/tmp3;
-		mv "$WORKING_DIR"/tmp3 "$WORKING_DIR"/"$INTERESTING_DOMAINS";
-
-		# Make sure > 0 domains are found
-		FOUND=$(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | cut -d ' ' -f 1);
-		if [[ $FOUND -gt 0 ]]; then
-				echo -e "$RED""[!] The following $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | cut -d ' ' -f 1) potentially interesting subdomains have been found ($WORKING_DIR/$INTERESTING_DOMAINS):""$ORANGE";
-				cat "$WORKING_DIR"/"$INTERESTING_DOMAINS";
-				sleep 1;
-		else
-				echo -e "$RED""[!] No interesting domains have been found yet.""$NC";
-				sleep 1;
-		fi
-}
 
 function cancel() {
 		echo -e "$RED""\\n[!] Cancelling command.""$NC";
@@ -754,7 +734,6 @@ if [[ "$DEFAULT_MODE" == 1 ]]; then
 		run_massdns "$DOMAIN" "$SHORT";
 		run_aquatone "default";
 		run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
-		get_interesting;
 
 		# Calculate scan runtime
 		SCAN_END=$(date +%s);
@@ -773,9 +752,7 @@ if [[ "$INTERACTIVE" == 1 ]]; then
 
 		run_subdomain_brute;
 		run_aquatone;
-		get_interesting;
 		run_information_gathering;
-		get_interesting;
 
 		# Calculate scan runtime
 		SCAN_END=$(date +%s);
@@ -803,8 +780,6 @@ if [[ "$SUBDOMAIN_BRUTE" == 1 ]]; then
 				run_sublist3r "$DOMAIN";
 				run_massdns "$DOMAIN" "$SHORT";
 		fi
-		# Get interesting domains
-		get_interesting;
 fi
 
 # -s screenshot with aquatone
@@ -830,7 +805,6 @@ if [[ "$INFO_GATHERING" == 1 ]]; then
 fi
 
 
-get_interesting;
 upload;
 
 # Calculate scan runtime
