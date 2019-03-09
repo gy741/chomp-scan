@@ -574,6 +574,7 @@ function upload() {
 		echo -e "$ORANGE""  Upload Starting....""$NC";
 		~/rclone/rclone copy "$WORKING_DIR"/"$ALL_DOMAIN" sub:$WORKING_DIR
 		~/rclone/rclone copy "$WORKING_DIR"/"$ALL_IP" sub:$WORKING_DIR
+		~/rclone/rclone copy "$WORKING_DIR"/subjack-output.txt sub:$WORKING_DIR
 		sleep 1;
 }
 
