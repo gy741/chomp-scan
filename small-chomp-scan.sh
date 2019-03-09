@@ -590,6 +590,12 @@ function run_subjack() {
 		sleep 1;
 }
 
+function upload() {
+		~/rclone/rclone copy "$WORKING_DIR" sub:
+		sleep 1;
+}
+
+
 function run_information_gathering() {
 # Ask user to do information gathering on discovered domains
 while true; do
@@ -748,7 +754,6 @@ if [[ "$DEFAULT_MODE" == 1 ]]; then
 		run_aquatone "default";
 		run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
 		get_interesting;
-		list_found;
 
 		# Calculate scan runtime
 		SCAN_END=$(date +%s);
@@ -770,7 +775,6 @@ if [[ "$INTERACTIVE" == 1 ]]; then
 		get_interesting;
 		run_information_gathering;
 		get_interesting;
-		list_found;
 
 		# Calculate scan runtime
 		SCAN_END=$(date +%s);
@@ -826,7 +830,7 @@ fi
 
 
 get_interesting;
-list_found;
+upload;
 
 # Calculate scan runtime
 SCAN_END=$(date +%s);
