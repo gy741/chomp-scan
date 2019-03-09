@@ -464,6 +464,8 @@ function run_massdns() {
 		# Add any new in-scope domains to main list
 		cut -d ' ' -f 3 "$WORKING_DIR"/massdns-CNAMEs | grep "$DOMAIN.$" >> "$WORKING_DIR"/$ALL_DOMAIN;
 		rm -rf "$WORKING_DIR"/altdns-output.txt
+		rm -rf "$WORKING_DIR"/massdns-result.txt
+		rm -rf "$WORKING_DIR"/massdns-CNAMEs
 		echo -e "$GREEN""[i]$BLUE Massdns took $DIFF seconds to run.""$NC";
 		echo -e "$GREEN""[!]$ORANGE Check $WORKING_DIR/massdns-CNAMEs for a list of CNAMEs found.""$NC";
 		sleep 1;
@@ -572,7 +574,8 @@ function run_subjack() {
 
 function upload() {
 		echo -e "$RED""  Upload Starting....""$NC";
-		~/rclone/rclone copy "$WORKING_DIR" sub:$WORKING_DIR
+		~/rclone/rclone copy "$WORKING_DIR"/"$ALL_DOMAIN" sub:$WORKING_DIR
+		~/rclone/rclone copy "$WORKING_DIR"/"$ALL_IP" sub:$WORKING_DIR
 		sleep 1;
 }
 
