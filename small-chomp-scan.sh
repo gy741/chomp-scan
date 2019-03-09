@@ -483,13 +483,11 @@ function run_massdns() {
 
 		# Add any new in-scope domains to main list
 		cut -d ' ' -f 3 "$WORKING_DIR"/massdns-CNAMEs | grep "$DOMAIN.$" >> "$WORKING_DIR"/$ALL_DOMAIN;
-
+		rm -rf "$WORKING_DIR"/altdns-output.txt
 		echo -e "$GREEN""[i]$BLUE Massdns took $DIFF seconds to run.""$NC";
 		echo -e "$GREEN""[!]$ORANGE Check $WORKING_DIR/massdns-CNAMEs for a list of CNAMEs found.""$NC";
 		sleep 1;
 
-		list_found;
-		sleep 1;
 }
 
 function run_subdomain_brute() {
@@ -582,8 +580,8 @@ function run_subjack() {
 		echo -e "$GREEN""[i]$BLUE Running subjack against all $(wc -l "$WORKING_DIR"/$ALL_DOMAIN | cut -d ' ' -f 1) unique discovered subdomains to check for subdomain takeover.""$NC";
 		echo -e "$GREEN""[i]$ORANGE Command: subjack -d $1 -w $2 -v -t 20 -ssl -m -o $WORKING_DIR/subjack-output.txt""$NC";
 		START=$(date +%s);
-		"$SUBJACK" -d "$1" -w "$2" -t 20 -ssl -m -o "$WORKING_DIR"/subjack-ssl-output.txt;
-		"$SUBJACK" -d "$1" -w "$2" -t 20 -m -o "$WORKING_DIR"/subjack-nossl-output.txt;
+		"$SUBJACK" -d "$1" -w "$2" -t 20 -ssl -m -o "$WORKING_DIR"/subjack-ssl-output.txt -c "$HOME"/go/src/github.com/gy741/subjack/fingerprints.json;
+		"$SUBJACK" -d "$1" -w "$2" -t 20 -m -o "$WORKING_DIR"/subjack-nossl-output.txt -c "$HOME"/go/src/github.com/gy741/subjack/fingerprints.json;
 		END=$(date +%s);
 		DIFF=$(( END - START ));
 
@@ -813,7 +811,7 @@ fi
 
 # -i information gathering
 if [[ "$INFO_GATHERING" == 1 ]]; then
-		echo -e "$BLUE""[i] Beginning information gathering with subjack, bfac, whatweb, wafw00f, and nikto.""$NC";
+		echo -e "$BLUE""[i] Beginning information gathering with subjack.""$NC";
 		sleep 0.5;
 
 		if [[ "$USE_ALL" == 1 ]]; then
