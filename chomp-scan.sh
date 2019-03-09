@@ -17,6 +17,9 @@ LARGE=wordlists/seclists-combined.txt;
 XL=wordlists/haddix_content_discovery_all.txt;
 XXL=wordlists/haddix-seclists-combined.txt;
 
+# upload setting
+TARGET=$(cat /etc/hostname);
+
 # User-defined CLI argument variables
 DOMAIN="";
 SUBDOMAIN_WORDLIST="";
@@ -561,7 +564,7 @@ function run_subjack() {
 		START=$(date +%s);
 		"$SUBJACK" -d "$1" -w "$2" -t 20 -ssl -m -o "$WORKING_DIR"/subjack-ssl-output.txt -c "$HOME"/go/src/github.com/gy741/subjack/fingerprints.json;
 		"$SUBJACK" -d "$1" -w "$2" -t 20 -m -o "$WORKING_DIR"/subjack-nossl-output.txt -c "$HOME"/go/src/github.com/gy741/subjack/fingerprints.json;
-		cat "$WORKING_DIR"/subjack-ssl-output.txt "$WORKING_DIR"/subjack-nossl-output.txt | sort | uniq | grep -v "amazonaws.com" >> ~/"$DOMAIN"-subjack-output.txt
+		cat "$WORKING_DIR"/subjack-ssl-output.txt "$WORKING_DIR"/subjack-nossl-output.txt | sort | uniq | grep -v "amazonaws.com" >> ~/"$TARGET"-subjack-output.txt;
 		END=$(date +%s);
 		DIFF=$(( END - START ));
 
@@ -572,15 +575,15 @@ function run_subjack() {
 
 function upload() {
 		echo -e "$ORANGE""  Upload Starting....""$NC";
-		~/rclone/rclone copy "$WORKING_DIR"/"$ALL_DOMAIN" sub:$WORKING_DIR
-		~/rclone/rclone copy "$WORKING_DIR"/"$ALL_IP" sub:$WORKING_DIR
-		~/rclone/rclone copy ~/"$DOMAIN"-subjack-output.txt sub:
+		~/rclone/rclone copy "$WORKING_DIR"/"$ALL_DOMAIN" sub:$WORKING_DIR;
+		~/rclone/rclone copy "$WORKING_DIR"/"$ALL_IP" sub:$WORKING_DIR;
+		~/rclone/rclone copy ~/"$TARGET"-subjack-output.txt sub:
 		sleep 1;
 }
 
 function remove_dir() {
 		echo -e "$RED""  Remove target directory....""$NC";
-		rm -rf  "$WORKING_DIR"
+		rm -rf  "$WORKING_DIR"/altdns-output.txt;
 		sleep 1;
 }
 
