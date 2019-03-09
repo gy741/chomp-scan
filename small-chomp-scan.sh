@@ -571,7 +571,7 @@ function run_subjack() {
 }
 
 function upload() {
-		echo -e "$BLUE""  Upload Starting....""$NC";
+		echo -e "$RED""  Upload Starting....""$NC";
 		~/rclone/rclone copy "$WORKING_DIR" sub:$WORKING_DIR
 		sleep 1;
 }
