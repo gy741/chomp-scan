@@ -24,7 +24,7 @@ wget https://github.com/michenriksen/aquatone/releases/download/v1.4.3/aquatone_
 unzip ~/bounty/tools/aquatone/aquatone.zip -d ~/bounty/tools/aquatone; # Unzip aquatone
 wget https://downloads.rclone.org/v1.46/rclone-v1.46-linux-amd64.zip -O ~/rclone.zip;
 unzip ~/rclone.zip -d ~/;
-mv rclone-v1.46-linux-amd64 rclone;
+mv ~/rclone-v1.46-linux-amd64 ~/rclone;
 git clone https://github.com/rbsec/dnscan.git ~/bounty/tools/dnscan;
 git clone https://github.com/infosec-au/altdns.git ~/bounty/tools/altdns; 
 git clone https://github.com/blechschmidt/massdns.git ~/bounty/tools/massdns; 
