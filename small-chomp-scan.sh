@@ -40,19 +40,12 @@ SKIP_MASSCAN=0;
 SUBFINDER=$(command -v subfinder);
 SUBLIST3R=$(command -v sublist3r);
 SUBJACK=$(command -v subjack);
-FFUF=$(command -v ffuf);
-WHATWEB=$(command -v whatweb);
-WAFW00F=$(command -v wafw00f);
-GOBUSTER=$(command -v gobuster);
 CHROMIUM=$(command -v chromium-browser);
-NMAP=$(command -v nmap);
-MASSCAN=$(command -v masscan);
 DNSCAN=~/bounty/tools/dnscan/dnscan.py;
 ALTDNS=~/bounty/tools/altdns/altdns.py;
 MASSDNS_BIN=~/bounty/tools/massdns/bin/massdns;
 MASSDNS_RESOLVERS=~/bounty/tools/massdns/lists/resolvers.txt;
 AQUATONE=~/bounty/tools/aquatone/aquatone;
-BFAC=~/bounty/tools/bfac/bfac;
 
 # Other variables
 ALL_IP=all_ip.txt;
@@ -316,64 +309,13 @@ function check_paths() {
 				echo -e "$RED""[!] The path or the file specified by the path for aquatone does not exit.";
 				exit 1;
 		fi
-		if [[ "$FFUF" == "" ]] || [[ ! -f "$FFUF" ]]; then
-				echo -e "$RED""[!] The path or the file specified by the path for ffuf does not exit.";
-				exit 1;
-		fi
-		if [[ "$BFAC" == "" ]] || [[ ! -f "$BFAC" ]]; then
-				echo -e "$RED""[!] The path or the file specified by the path for bfac does not exit.";
-				exit 1;
-		fi
 		if [[ "$CHROMIUM" == "" ]] || [[ ! -f "$CHROMIUM" ]]; then
 				echo -e "$RED""[!] The path or the file specified by the path for chromium does not exit.";
 				exit 1;
 		fi
-		if [[ "$NMAP" == "" ]] || [[ ! -f "$NMAP" ]]; then
-				echo -e "$RED""[!] The path or the file specified by the path for nmap does not exit.";
-				exit 1;
-		fi
-		if [[ "$MASSCAN" == "" ]] || [[ ! -f "$MASSCAN" ]]; then
-				echo -e "$RED""[!] The path or the file specified by the path for masscan does not exit.";
-				exit 1;
-		fi
-		if [[ "$GOBUSTER" == "" ]] || [[ ! -f "$GOBUSTER" ]]; then
-				echo -e "$RED""[!] The path or the file specified by the path for gobuster does not exit.";
-				exit 1;
-		fi
-		if [[ "$WHATWEB" == "" ]] || [[ ! -f "$WHATWEB" ]]; then
-				echo -e "$RED""[!] The path or the file specified by the path for whatweb does not exit.";
-				exit 1;
-		fi
-		if [[ "$WAFW00F" == "" ]] || [[ ! -f "$WAFW00F" ]]; then
-				echo -e "$RED""[!] The path or the file specified by the path for wafw00f does not exit.";
-				exit 1;
-		fi
 }
 
-# Check for root for runs using masscan
-function check_root() {
-		if [[ $EUID -ne 0 ]]; then
-		   while true; do
-				   echo -e "$ORANGE""[!] Please note: Script is not being run as root."
-				   echo -e "$ORANGE""[!] Provided script options include masscan, which must run as root."
-				   read -rp "Do you want to exit and [R]e-run as root, or [S]kip masscan? " CHOICE;
-						   case $CHOICE in
-								   [rR]* )
-										   echo -e "$RED""[!] Exiting script.""$NC";
-										   exit 1;
-										   ;;
-								   [sS]* )
-										   echo -e "$ORANGE""Skipping masscan.""$NC";
-										   SKIP_MASSCAN=1;
-										   break;
-										   ;;
-								   * )
-										   echo -e "$ORANGE""Please enter [R]e-run or [S]kip masscan.""$NC";
-										   ;;
-						   esac
-		   done
-		fi
-}
+
 
 function unique() {
 		# Remove domains from blacklist
@@ -510,7 +452,7 @@ function run_altdns() {
 		echo -e "$GREEN""[i]$BLUE Running altdns against all $(wc -l "$WORKING_DIR"/$ALL_DOMAIN | cut -d ' ' -f 1) unique discovered subdomains to generate domains for masscan to resolve.""$NC";
 		echo -e "$GREEN""[i]$ORANGE Command: altdns.py -i $WORKING_DIR/$ALL_DOMAIN -w wordlists/altdns-words.txt -o $WORKING_DIR/altdns-output.txt -t 20.""$NC";
 		START=$(date +%s);
-		"$ALTDNS" -i "$WORKING_DIR"/$ALL_DOMAIN -w wordlists/altdns-words.txt -o "$WORKING_DIR"/altdns-output.txt -t 20
+		"$ALTDNS" -i "$WORKING_DIR"/$ALL_DOMAIN -w wordlists/altdns-words.txt -o "$WORKING_DIR"/altdns-output.txt
 		END=$(date +%s);
 		DIFF=$(( END - START ));
 
@@ -632,457 +574,6 @@ function run_aquatone () {
 		fi
 }
 
-function run_masscan() {
-		# Check if not root and SKIP_MASSCAN is set
-		if [[ "$SKIP_MASSCAN" == 1 ]]; then
-				echo -e "$ORANGE""[!] Skipping masscan since script is not being run as root.""$NC";
-				sleep 1;
-		else
-				# Run masscan against all IPs found on all ports
-				echo -e "$GREEN""[i]$BLUE Running masscan against all $(wc -l "$WORKING_DIR"/$ALL_IP | cut -d ' ' -f 1) unique discovered IP addresses.""$NC";
-				echo -e "$GREEN""[i]$BLUE Command: masscan -p1-65535 -il $WORKING_DIR/$ALL_IP --rate=7000 -oL $WORKING_DIR/masscan-output.txt.""$NC";
-
-				# Check that IP list is not empty
-				IP_COUNT=$(wc -l "$WORKING_DIR"/$ALL_IP | cut -d ' ' -f 1);
-				if [[ "$IP_COUNT" -lt 1 ]]; then
-						echo -e "$RED""[i] No IP addresses have been found. Skipping masscan scan.""$NC";
-						return;
-				fi
-
-				START=$(date +%s);
-				sudo "$MASSCAN" -p1-65535 -iL "$WORKING_DIR"/$ALL_IP --rate=7000 -oL "$WORKING_DIR"/masscan-output.txt;
-				END=$(date +%s);
-				DIFF=$(( END - START ));
-				echo -e "$GREEN""[i]$BLUE Masscan took $DIFF seconds to run.""$NC";
-
-				# Trim # from first and last lines of output
-				grep -v '#' "$WORKING_DIR"/masscan-output.txt > "$WORKING_DIR"/temp;
-				sudo mv "$WORKING_DIR"/temp "$WORKING_DIR"/masscan-output.txt;
-			fi
-}
-
-function run_nmap() {
-		# Check that IP list is not empty
-		IP_COUNT=$(wc -l "$WORKING_DIR"/$ALL_IP | cut -d ' ' -f 1);
-		if [[ "$IP_COUNT" -lt 1 ]]; then
-				echo -e "$RED""[i] No IP addresses have been found. Skipping nmap scan.""$NC";
-				return;
-		fi
-
-		# Run nmap against all-ip.txt against ports found by masscan, unless alone arg is passed as $1
-		if [[ "$1" == "alone" ]]; then
-				echo -e "$GREEN""[i]$BLUE Running nmap against all $(wc -l "$WORKING_DIR"/"$ALL_IP" | cut -d ' ' -f 1) unique discovered IP addresses.""$NC";
-				echo -e "$GREEN""[i]$BLUE Command: nmap -n -v -sV -iL $WORKING_DIR/all_ip.txt -oA $WORKING_DIR/nmap-output --stylesheet https://raw.githubusercontent.com/honze-net/nmap-bootstrap-xsl/master/nmap-bootstrap.xsl.""$NC";
-				START=$(date +%s);
-				"$NMAP" -n -v -sV -iL "$WORKING_DIR"/"$ALL_IP" -oA "$WORKING_DIR"/nmap-output --stylesheet https://raw.githubusercontent.com/honze-net/nmap-bootstrap-xsl/master/nmap-bootstrap.xsl;
-				END=$(date +%s);
-				DIFF=$(( END - START ));
-				echo -e "$GREEN""[i]$BLUE Nmap took $DIFF seconds to run.""$NC";
-		# Make sure masscan actually created output
-		elif [[ ! -s "$WORKING_DIR"/masscan-output.txt ]]; then
-				echo -e "$GREEN""[i]$BLUE Running nmap against all $(wc -l "$WORKING_DIR"/"$ALL_IP" | cut -d ' ' -f 1) unique discovered IP addresses.""$NC";
-				echo -e "$GREEN""[i]$BLUE Command: nmap -n -v -sV -iL $WORKING_DIR/all_ip.txt -oA $WORKING_DIR/nmap-output --stylesheet https://raw.githubusercontent.com/honze-net/nmap-bootstrap-xsl/master/nmap-bootstrap.xsl.""$NC";
-				START=$(date +%s);
-				"$NMAP" -n -v -sV -iL "$WORKING_DIR"/"$ALL_IP" -oA "$WORKING_DIR"/nmap-output --stylesheet https://raw.githubusercontent.com/honze-net/nmap-bootstrap-xsl/master/nmap-bootstrap.xsl;
-				END=$(date +%s);
-				DIFF=$(( END - START ));
-				echo -e "$GREEN""[i]$BLUE Nmap took $DIFF seconds to run.""$NC";
-		else
-				# Process masscan output for ports found
-				cut -d ' ' -f 3  "$WORKING_DIR"/masscan-output.txt >> "$WORKING_DIR"/temp;
-				sort "$WORKING_DIR"/temp | uniq > "$WORKING_DIR"/ports;
-				rm "$WORKING_DIR"/temp;
-
-				# Count ports in case it's over nmap's ~22k parameter limit, then run multiple scans
-				PORT_NUMBER=$(wc -l "$WORKING_DIR"/ports | cut -d ' ' -f 1);
-
-				if [[ $PORT_NUMBER -gt 22000 ]]; then
-						echo -e "$GREEN""[!]$RED WARNING: Masscan found more than 22k open ports. This is more than nmap's port argument length limit, and likely indicates lots of false positives. Consider running nmap with -p- to scan all ports.""$NC";
-						sleep 2;
-						return;
-				fi
-
-				# Get live IPs from masscan
-				cut -d ' ' -f 4 "$WORKING_DIR"/masscan-output.txt >> "$WORKING_DIR"/"$ALL_IP";
-				
-				echo -e "$GREEN""[i]$BLUE Running nmap against $(wc -l "$WORKING_DIR"/"$ALL_IP" | cut -d ' ' -f 1) unique discovered IP addresses and $(wc -l "$WORKING_DIR"/ports | cut -d ' ' -f 1) ports identified by masscan.""$NC";
-				echo -e "$GREEN""[i]$BLUE Command: nmap -n -v -sV -iL $WORKING_DIR/all_ip.txt -p $(tr '\n' , < "$WORKING_DIR"/ports) -oA $WORKING_DIR/nmap-output.""$NC";
-				START=$(date +%s);
-				nmap -n -v -sV -iL "$WORKING_DIR"/"$ALL_IP" -p "$(tr '\n' , < "$WORKING_DIR"/ports)" -oA "$WORKING_DIR"/nmap-output;
-				END=$(date +%s);
-				DIFF=$(( END - START ));
-				echo -e "$GREEN""[i]$BLUE Nmap took $DIFF seconds to run.""$NC";
-		fi
-		echo -e "$GREEN""[i]$BLUE Nmap took $DIFF seconds to run.""$NC";
-}
-
-function run_portscan() {
-		   while true; do
-				   echo -e "$GREEN""[?] Do you want to perform port scanning?""$NC";
-				   echo -e "$ORANGE""[i] This will use masscan and/or nmap.""$NC";
-				   echo -e "$ORANGE";
-				   read -rp "[i] Enter Y/N " CHOICE;
-				   case $CHOICE in
-						   [yY]* )
-								   while true; do
-										   echo -e "$GREEN""[i] Do you want to run [B]oth masscan and nmap, only [N]map, or only [M]asscan?";
-										   read -rp "[i] Enter B/N/M " CHOICE;
-										   case $CHOICE in
-												   [bB]* )
-														   run_masscan;
-														   run_nmap;
-														   break;
-														   ;;
-													[nN]* )
-														   run_nmap alone;
-														   break;
-														   ;;
-													[mM]* )
-														   run_masscan;
-														   break;
-														   ;;
-												   * )     
-														   echo -e "$RED""[!] Please enter B/b, N/n, or M/m. ""$NC"
-														   ;;
-										   esac
-								   done
-								   break;
-								   ;;
-							[nN]* )
-								   echo -e "$RED""[!] Cancelling port scan.""$NC";
-								   return;
-								   ;;
-						        * )     
-								   echo -e "$RED""[!] Please enter Y/y or N/n. ""$NC"
-								   ;;
-				   esac
-		   done
-}
-
-function run_gobuster() {
-		# Call with domain as $1, wordlist size as $2, and domain list as $3
-		if [[ $3 == $WORKING_DIR/$ALL_DOMAIN ]]; then
-				echo -e "$GREEN""[i]$BLUE Running gobuster against all $(wc -l "$3" | cut -d ' ' -f 1) unique discovered domains.""$NC";
-				echo -e "$GREEN""[i]$BLUE Command: gobuster -u https://$DOMAIN -s '200,201,202,204,307,308,401,403,405,500,501,503' -to 3s -e -k -t 20 -w $2 -o gobuster.""$NC";
-				# Run gobuster
-				mkdir "$WORKING_DIR"/gobuster;
-				COUNT=$(wc -l "$3" | cut -d ' ' -f 1)
-				START=$(date +%s);
-				while read -r ADOMAIN; do
-						"$GOBUSTER" -u "$HTTP"://"$ADOMAIN" -s '200,201,202,204,307,308,401,403,405,500,501,503' -to 3s -e -k -t 20 -w "$2" -o "$WORKING_DIR"/gobuster/"$ADOMAIN".txt;
-						COUNT=$((COUNT - 1));
-						echo -e "$GREEN""[i]$BLUE $COUNT domain(s) remaining.""$NC";
-				done < "$3"
-				END=$(date +%s);
-				DIFF=$(( END - START ));
-				echo -e "$GREEN""[i]$BLUE Gobuster took $DIFF seconds to run.""$NC";
-		else
-				echo -e "$GREEN""[i]$BLUE Running gobuster against all $(wc -l "$3" | cut -d ' ' -f 1) discovered interesting domains.""$NC";
-				echo -e "$GREEN""[i]$BLUE Command: gobuster -u $HTTP://$DOMAIN -s '200,201,202,204,307,308,401,403,405,500,501,503' -to 3s -e -k -t 20 -w $2 -o $WORKING_DIR/gobuster""$NC";
-				# Run gobuster
-				mkdir "$WORKING_DIR"/gobuster;
-				COUNT=$(wc -l "$3" | cut -d ' ' -f 1)
-				START=$(date +%s);
-				while read -r ADOMAIN; do
-						"$GOBUSTER" -u "$HTTP"://"$ADOMAIN" -s '200,201,202,204,307,308,401,403,405,500,501,503' -to 3s -e -k -t 20 -w "$2" -o "$WORKING_DIR"/gobuster/"$ADOMAIN".txt;
-						COUNT=$((COUNT - 1));
-						echo -e "$GREEN""[i]$BLUE $COUNT domain(s) remaining.""$NC";
-				done < "$3"
-				END=$(date +%s);
-				DIFF=$(( END - START ));
-				echo -e "$GREEN""[i]$BLUE Gobuster took $DIFF seconds to run.""$NC";
-		fi
-}
-
-function run_ffuf() {
-		# Trap SIGINT so broken ffuf runs can be cancelled
-		trap cancel SIGINT;
-
-		# Call with domain as $1, wordlist size as $2, and domain list as $3
-		if [[ $3 == $WORKING_DIR/$ALL_DOMAIN ]]; then
-				echo -e "$GREEN""[i]$BLUE Running ffuf against all $(wc -l "$3" | cut -d ' ' -f 1) unique discovered domains.""$NC";
-				echo -e "$GREEN""[i]$BLUE Command: ffuf -u $HTTP://$DOMAIN/FUZZ -w $2 -fc 301,302 -k | tee $WORKING_DIR/ffuf.""$NC";
-				# Run ffuf
-				mkdir "$WORKING_DIR"/ffuf;
-				COUNT=$(wc -l "$3" | cut -d ' ' -f 1)
-				START=$(date +%s);
-				while read -r ADOMAIN; do
-						"$FFUF" -u "$HTTP"://"$ADOMAIN"/FUZZ -w "$2" -fc 301,302 -k -mc 200,201,202,204,401,403,500,502,503 | tee "$WORKING_DIR"/ffuf/"$ADOMAIN";
-						COUNT=$((COUNT - 1));
-						echo -e "$GREEN""[i]$BLUE $COUNT domain(s) remaining.""$NC";
-				done < "$3"
-				END=$(date +%s);
-				DIFF=$(( END - START ));
-				echo -e "$GREEN""[i]$BLUE ffuf took $DIFF seconds to run.""$NC";
-		else
-				echo -e "$GREEN""[i]$BLUE Running ffuf against all $(wc -l "$3" | cut -d ' ' -f 1) discovered interesting domains.""$NC";
-				echo -e "$GREEN""[i]$BLUE Command: ffuf -u $HTTP://$DOMAIN/FUZZ -w $2 -fc 301,302 -k | tee $WORKING_DIR/ffuf.""$NC";
-				# Run ffuf
-				mkdir "$WORKING_DIR"/ffuf;
-				COUNT=$(wc -l "$3" | cut -d ' ' -f 1)
-				START=$(date +%s);
-				while read -r ADOMAIN; do
-						"$FFUF" -u "$HTTP"://"$ADOMAIN"/FUZZ -w "$2" -fc 301,302 -k -mc 200,201,202,204,401,403,500,502,503 | tee "$WORKING_DIR"/ffuf/"$ADOMAIN";
-						COUNT=$((COUNT - 1));
-						echo -e "$GREEN""[i]$BLUE $COUNT domain(s) remaining.""$NC";
-				done < "$3"
-				END=$(date +%s);
-				DIFF=$(( END - START ));
-				echo -e "$GREEN""[i]$BLUE ffuf took $DIFF seconds to run.""$NC";
-		fi
-}
-
-function run_content_discovery() {
-# Ask user to do directory bruteforcing on discovered domains
-while true; do
-  echo -e "$GREEN""[?] Do you want to begin content bruteforcing on [A]ll/[I]nteresting/[N]o discovered domains?";
-  echo -e "$ORANGE""[i] This will run ffuf and gobuster.";
-  read -rp "[?] Please enter A/a, I/i, or N/n. " ANSWER
-
-  case $ANSWER in
-   [aA]* ) 
-		   echo -e "[i] Beginning directory bruteforcing on all discovered domains.";
-		   while true; do
-				   echo -e "$GREEN""[?] Which wordlist do you want to use?""$NC";
-				   echo -e "$BLUE""   Small: ~20k words""$NC";
-				   echo -e "$BLUE""   Medium: ~167k words""$NC";
-				   echo -e "$BLUE""   Large: ~215k words""$NC";
-				   echo -e "$BLUE""   XL: ~373k words""$NC";
-				   echo -e "$BLUE""   2XL: ~486k words""$GREEN";
-				   read -rp "[i] Enter S/M/L/X/2 " CHOICE;
-				   case $CHOICE in
-						   [sS]* )
-								   run_ffuf "$DOMAIN" "$SMALL" "$WORKING_DIR"/"$ALL_DOMAIN";
-								   run_gobuster "$DOMAIN" "$SMALL" "$WORKING_DIR"/"$ALL_DOMAIN";
-								   break;
-								   ;;
-							[mM]* )
-								   run_ffuf "$DOMAIN" "$MEDIUM" "$WORKING_DIR"/"$ALL_DOMAIN";
-								   run_gobuster "$DOMAIN" "$MEDIUM" "$WORKING_DIR"/"$ALL_DOMAIN";
-								   break;
-								   ;;
-							[lL]* )
-								   run_ffuf "$DOMAIN" "$LARGE" "$WORKING_DIR"/"$ALL_DOMAIN";
-								   run_gobuster "$DOMAIN" "$LARGE" "$WORKING_DIR"/"$ALL_DOMAIN";
-								   break;
-								   ;;
-							[xX]* )
-								   run_ffuf "$DOMAIN" "$XL" "$WORKING_DIR"/"$ALL_DOMAIN";
-								   run_gobuster "$DOMAIN" "$XL" "$WORKING_DIR"/"$ALL_DOMAIN";
-								   break;
-								   ;;
-							[2]* )
-								   run_ffuf "$DOMAIN" "$XXL" "$WORKING_DIR"/"$ALL_DOMAIN";
-								   run_gobuster "$DOMAIN" "$XXL" "$WORKING_DIR"/"$ALL_DOMAIN";
-								   break;
-								   ;;
-							* )
-									echo -e "$RED""Please enter S/M/L/X/2 .""$NC";
-									;;
-				   esac
-		   done
-		   break;
-		   ;;
-   [nN]* ) 
-		   echo -e "$RED""[!] Skipping directory bruteforcing on all domains.""$NC";
-		   return;
-		   ;;
-   [iI]* ) 
-		   # Check if any interesting domains have been found.'
-		   COUNT=$(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | cut -d ' ' -f 1);
-		   if [[ "$COUNT" -lt 1 ]]; then
-				   echo -e "$RED""[!] No interesting domains have been discovered.""$NC";
-				   return;
-		   fi
-				   
-		   echo -e "[i] Beginning directory bruteforcing on all interesting discovered domains.";
-		   while true; do
-				   echo -e "$GREEN""[?] Which wordlist do you want to use?""$NC";
-				   echo -e "$BLUE""   Small: ~20k words""$NC";
-				   echo -e "$BLUE""   Medium: ~167k words""$NC";
-				   echo -e "$BLUE""   Large: ~215k words""$NC";
-				   echo -e "$BLUE""   XL: ~373k words""$NC";
-				   echo -e "$BLUE""   2XL: ~486k words""$GREEN";
-				   read -rp "[i] Enter S/M/L/X/2 " CHOICE;
-				   case $CHOICE in
-						   [sS]* )
-								   run_ffuf "$DOMAIN" "$SMALL" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
-								   run_gobuster "$DOMAIN" "$SMALL" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
-								   break;
-								   ;;
-							[mM]* )
-								   run_ffuf "$DOMAIN" "$MEDIUM" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
-								   run_gobuster "$DOMAIN" "$MEDIUM" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
-								   break;
-								   ;;
-							[lL]* )
-								   run_ffuf "$DOMAIN" "$LARGE" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
-								   run_gobuster "$DOMAIN" "$LARGE" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
-								   break;
-								   ;;
-							[xX]* )
-								   run_ffuf "$DOMAIN" "$XL" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
-								   run_gobuster "$DOMAIN" "$XL" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
-								   break;
-								   ;;
-							[2]* )
-								   run_ffuf "$DOMAIN" "$XXL" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
-								   run_gobuster "$DOMAIN" "$XXL" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
-								   break;
-								   ;;
-							* )
-									echo -e "$RED""Please enter S/M/L/X/2 .""$NC";
-									;;
-				   esac
-		   done
-		   break;
-		   ;;
-   * )     
-		   echo -e "$RED""Please enter Y/y, N/n, or A/a. ""$NC";
-		   ;;
-  esac
-done
-}
-
-function run_bfac() {
-		# Call with domain list as $1
-		if [[ $1 == $WORKING_DIR/$ALL_DOMAIN ]]; then
-				echo -e "$GREEN""[i]$BLUE Running bfac against all $(wc -l "$1" | cut -d ' ' -f 1) unique discovered domains.""$NC";
-				echo -e "$GREEN""[i]$BLUE Command: bfac -u $DOMAIN -xsc 404,301,302,400 -o $WORKING_DIR/bfac.""$NC";
-				# Run ffuf
-				mkdir "$WORKING_DIR"/bfac;
-				COUNT=$(wc -l "$1" | cut -d ' ' -f 1)
-				START=$(date +%s);
-				while read -r ADOMAIN; do
-						$BFAC -u "$ADOMAIN" -xsc 404,301,302,400 -o "$WORKING_DIR"/bfac/"$ADOMAIN";
-						COUNT=$((COUNT - 1));
-						echo -e "$GREEN""[i]$BLUE $COUNT domain(s) remaining.""$NC";
-				done < "$1"
-				END=$(date +%s);
-				DIFF=$(( END - START ));
-				echo -e "$GREEN""[i]$BLUE ffuf took $DIFF seconds to run.""$NC";
-		else
-				echo -e "$GREEN""[i]$BLUE Running bfac against all $(wc -l "$1" | cut -d ' ' -f 1) discovered interesting domains.""$NC";
-				echo -e "$GREEN""[i]$BLUE Command: bfac -u $DOMAIN -xsc 404,301,302,400 -o $WORKING_DIR/bfac.""$NC";
-				# Run ffuf
-				mkdir "$WORKING_DIR"/bfac;
-				COUNT=$(wc -l "$1" | cut -d ' ' -f 1)
-				START=$(date +%s);
-				while read -r ADOMAIN; do
-						$BFAC -u "$ADOMAIN" -xsc 404,301,302,400 -o "$WORKING_DIR"/bfac/"$ADOMAIN";
-						COUNT=$((COUNT - 1));
-						echo -e "$GREEN""[i]$BLUE $COUNT domain(s) remaining.""$NC";
-				done < "$1"
-				END=$(date +%s);
-				DIFF=$(( END - START ));
-				echo -e "$GREEN""[i]$BLUE bfac took $DIFF seconds to run.""$NC";
-		fi
-}
-
-function run_nikto() {
-		# Call with domain list as $1
-		if [[ $1 == $WORKING_DIR/$ALL_DOMAIN ]]; then
-				echo -e "$GREEN""[i]$BLUE Running nikto against all $(wc -l "$1" | cut -d ' ' -f 1) unique discovered domains.""$NC";
-				echo -e "$GREEN""[i]$BLUE Command: nikto -h $HTTP://$DOMAIN -output $WORKING_DIR/nikto.""$NC";
-				# Run nikto
-				COUNT=$(wc -l "$1" | cut -d ' ' -f 1)
-				mkdir "$WORKING_DIR"/nikto;
-				START=$(date +%s);
-				while read -r ADOMAIN; do
-						nikto -h "$HTTP"://"$ADOMAIN" -output "$WORKING_DIR"/nikto/"$ADOMAIN".txt;
-						COUNT=$((COUNT - 1));
-						echo -e "$GREEN""[i]$BLUE $COUNT domain(s) remaining.""$NC";
-				done < "$1"
-				END=$(date +%s);
-				DIFF=$(( END - START ));
-				echo -e "$GREEN""[i]$BLUE ffuf took $DIFF seconds to run.""$NC";
-		else
-				echo -e "$GREEN""[i]$BLUE Running nikto against all $(wc -l "$1" | cut -d ' ' -f 1) discovered interesting domains.""$NC";
-				echo -e "$GREEN""[i]$BLUE Command: nikto -h $HTTP://$DOMAIN -output $WORKING_DIR/nikto.""$NC";
-				# Run nikto
-				COUNT=$(wc -l "$1" | cut -d ' ' -f 1)
-				mkdir "$WORKING_DIR"/nikto;
-				START=$(date +%s);
-				while read -r ADOMAIN; do
-						nikto -h "$HTTP"://"$ADOMAIN" -output "$WORKING_DIR"/nikto/"$ADOMAIN".txt;
-						COUNT=$((COUNT - 1));
-						echo -e "$GREEN""[i]$BLUE $COUNT domain(s) remaining.""$NC";
-				done < "$1"
-				END=$(date +%s);
-				DIFF=$(( END - START ));
-				echo -e "$GREEN""[i]$BLUE nikto took $DIFF seconds to run.""$NC";
-		fi
-}
-
-function run_whatweb() {
-		# Call with domain as $1 and domain list as $2
-		if [[ $2 == $WORKING_DIR/$ALL_DOMAIN ]]; then
-				echo -e "$GREEN""[i]$BLUE Running whatweb against all $(wc -l "$2" | cut -d ' ' -f 1) unique discovered domains.""$NC";
-				echo -e "$GREEN""[i]$BLUE Command: whatweb -v -a 3 -h $HTTP://$DOMAIN | tee $WORKING_DIR/whatweb.""$NC";
-				# Run whatweb
-				COUNT=$(wc -l "$2" | cut -d ' ' -f 1)
-				mkdir "$WORKING_DIR"/whatweb;
-				START=$(date +%s);
-				while read -r ADOMAIN; do
-						"$WHATWEB" -v -a 3 "$HTTP"://"$ADOMAIN" | tee "$WORKING_DIR"/whatweb/"$ADOMAIN";
-						COUNT=$((COUNT - 1));
-						echo -e "$GREEN""[i]$BLUE $COUNT domain(s) remaining.""$NC";
-				done < "$2"
-				END=$(date +%s);
-				DIFF=$(( END - START ));
-				echo -e "$GREEN""[i]$BLUE whatweb took $DIFF seconds to run.""$NC";
-		else
-				echo -e "$GREEN""[i]$BLUE Running whatweb against all $(wc -l "$2" | cut -d ' ' -f 1) discovered interesting domains.""$NC";
-				echo -e "$GREEN""[i]$BLUE Command: whatweb -v -a 3 -h $HTTP://$DOMAIN | tee $WORKING_DIR/whatweb.""$NC";
-				# Run whatweb
-				COUNT=$(wc -l "$2" | cut -d ' ' -f 1)
-				mkdir "$WORKING_DIR"/whatweb;
-				START=$(date +%s);
-				while read -r ADOMAIN; do
-						"$WHATWEB" -v -a 3 "$HTTP"://"$ADOMAIN" | tee "$WORKING_DIR"/whatweb/"$ADOMAIN";
-						COUNT=$((COUNT - 1));
-						echo -e "$GREEN""[i]$BLUE $COUNT domain(s) remaining.""$NC";
-				done < "$2"
-				END=$(date +%s);
-				DIFF=$(( END - START ));
-				echo -e "$GREEN""[i]$BLUE whatweb took $DIFF seconds to run.""$NC";
-		fi
-}
-
-function run_wafw00f() {
-		# Call with domain as $1 and domain list as $2
-		if [[ $2 == $WORKING_DIR/$ALL_DOMAIN ]]; then
-				echo -e "$GREEN""[i]$BLUE Running wafw00f against all $(wc -l "$2" | cut -d ' ' -f 1) unique discovered domains.""$NC";
-				echo -e "$GREEN""[i]$BLUE Command: wafw00f $HTTP://$1 -a | tee $WORKING_DIR/wafw00f.""$NC";
-				# Run wafw00f
-				COUNT=$(wc -l "$2" | cut -d ' ' -f 1)
-				mkdir "$WORKING_DIR"/wafw00f;
-				START=$(date +%s);
-				while read -r ADOMAIN; do
-						"$WAFW00F" "$HTTP"://"$ADOMAIN" -a | tee "$WORKING_DIR"/wafw00f/"$ADOMAIN";
-						COUNT=$((COUNT - 1));
-						echo -e "$GREEN""[i]$BLUE $COUNT domain(s) remaining.""$NC";
-				done < "$2"
-				END=$(date +%s);
-				DIFF=$(( END - START ));
-				echo -e "$GREEN""[i]$BLUE whatweb took $DIFF seconds to run.""$NC";
-		else
-				echo -e "$GREEN""[i]$BLUE Running wafw00f against all $(wc -l "$2" | cut -d ' ' -f 1) discovered interesting domains.""$NC";
-				echo -e "$GREEN""[i]$BLUE Command: wafw00f $HTTP://$1 -a | tee $WORKING_DIR/wafw00f.""$NC";
-				# Run wafw00f
-				COUNT=$(wc -l "$2" | cut -d ' ' -f 1)
-				mkdir "$WORKING_DIR"/wafw00f;
-				START=$(date +%s);
-				while read -r ADOMAIN; do
-						"$WAFW00F" "$HTTP"://"$ADOMAIN" -a | tee "$WORKING_DIR"/wafw00f/"$ADOMAIN";
-						COUNT=$((COUNT - 1));
-						echo -e "$GREEN""[i]$BLUE $COUNT domain(s) remaining.""$NC";
-				done < "$2"
-				END=$(date +%s);
-				DIFF=$(( END - START ));
-				echo -e "$GREEN""[i]$BLUE wafw00f took $DIFF seconds to run.""$NC";
-		fi
-}
 
 function run_subjack() {
 		# Call with domain as $1 and wordlist as $2
@@ -1247,8 +738,6 @@ touch "$WORKING_DIR"/"$ALL_IP";
 # Information gathering: all tools
 # Domains to scan: all unique discovered
 if [[ "$DEFAULT_MODE" == 1 ]]; then
-		# Check if we're root since we're running masscan
-		check_root;
 
 		# Run all phases with defaults
 		echo -e "$GREEN""Beginning non-interactive mode scan.""$NC";
@@ -1259,15 +748,7 @@ if [[ "$DEFAULT_MODE" == 1 ]]; then
 		run_sublist3r "$DOMAIN";
 		run_massdns "$DOMAIN" "$SHORT";
 		run_aquatone "default";
-		run_masscan;
-		run_nmap;
 		run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
-		run_bfac "$WORKING_DIR"/"$ALL_DOMAIN";
-		run_nikto "$WORKING_DIR"/"$ALL_DOMAIN";
-		run_whatweb "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
-		run_wafw00f "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
-		run_ffuf "$DOMAIN" "$SMALL" "$WORKING_DIR"/"$ALL_DOMAIN";
-		run_gobuster "$DOMAIN" "$SMALL" "$WORKING_DIR"/"$ALL_DOMAIN";
 		get_interesting;
 		list_found;
 
@@ -1281,8 +762,6 @@ fi
 
 # Run in interactive mode, ignoring other parameters
 if [[ "$INTERACTIVE" == 1 ]]; then
-		# Check if we're root since we're running masscan
-		check_root;
 
 		# Run phases interactively
 		echo -e "$GREEN""Beginning interactive mode scan.""$NC";
@@ -1291,9 +770,7 @@ if [[ "$INTERACTIVE" == 1 ]]; then
 		run_subdomain_brute;
 		run_aquatone;
 		get_interesting;
-		run_portscan;
 		run_information_gathering;
-		run_content_discovery;
 		get_interesting;
 		list_found;
 
@@ -1305,11 +782,6 @@ if [[ "$INTERACTIVE" == 1 ]]; then
 		exit;
 fi
 
-# Preemptively check for -p portscanning
-if [[ "$PORTSCANNING" == 1 ]]; then
-		# Check if we're root since we're running masscan
-		check_root;
-fi
 
 # Always run subdomain bruteforce tools
 if [[ "$SUBDOMAIN_BRUTE" == 1 ]]; then
@@ -1354,47 +826,6 @@ if [[ "$INFO_GATHERING" == 1 ]]; then
 		fi
 fi
 
-# -C run content discovery
-if [[ "$CONTENT_DISCOVERY" == 1 ]]; then
-		echo -e "$BLUE""[i] Beginning content discovery with ffuf and gobuster.""$NC";
-		sleep 0.5;
-
-		# Check if $SUBDOMAIN_WORDLIST is set, else use short as default
-		if [[ "$CONTENT_WORDLIST" != "" ]]; then
-				if [[ "$USE_ALL" == 1 ]]; then
-						run_ffuf "$DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$ALL_DOMAIN";
-						run_gobuster "$DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$ALL_DOMAIN";
-				# Make sure there are interesting domains
-				elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | cut -d ' ' -f 1) != 0 ]]; then
-						run_ffuf "$DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
-						run_gobuster "$DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
-				else
-						run_ffuf "$DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$ALL_DOMAIN";
-						run_gobuster "$DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$ALL_DOMAIN";
-				fi
-		else
-				if [[ "$USE_ALL" == 1 ]]; then
-						run_ffuf "$DOMAIN" "$SHORT" "$WORKING_DIR"/"$ALL_DOMAIN";
-						run_gobuster "$DOMAIN" "$SHORT" "$WORKING_DIR"/"$ALL_DOMAIN";
-				# Make sure there are interesting domains
-				elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | cut -d ' ' -f 1) != 0 ]]; then
-						run_ffuf "$DOMAIN" "$SHORT" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
-						run_gobuster "$DOMAIN" "$SHORT" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
-				else
-						run_ffuf "$DOMAIN" "$SHORT" "$WORKING_DIR"/"$ALL_DOMAIN";
-						run_gobuster "$DOMAIN" "$SHORT" "$WORKING_DIR"/"$ALL_DOMAIN";
-				fi
-		fi
-fi
-
-# -p portscanning
-if [[ "$PORTSCANNING" == 1 ]]; then
-		echo -e "$GREEN""Beginning portscanning with masscan (if root) and nmap.""$NC";
-		sleep 0.5;
-
-		run_masscan;
-		run_nmap;
-fi
 
 get_interesting;
 list_found;
