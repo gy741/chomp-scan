@@ -18,6 +18,7 @@ echo "export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin:" >> "$HOME"/.profile;
 source "$HOME"/.profile;
 rm -rf go1.12.linux-amd64.tar.gz;
 go get github.com/subfinder/subfinder;
+go get github.com/subfinder/goaltdns;
 go get github.com/gy741/subjack;
 mkdir -pv ~/bounty/tools/aquatone;
 wget https://github.com/michenriksen/aquatone/releases/download/v1.4.3/aquatone_linux_amd64_1.4.3.zip -O ~/bounty/tools/aquatone/aquatone.zip;
@@ -25,8 +26,7 @@ unzip ~/bounty/tools/aquatone/aquatone.zip -d ~/bounty/tools/aquatone; # Unzip a
 wget https://downloads.rclone.org/v1.46/rclone-v1.46-linux-amd64.zip -O ~/rclone.zip;
 unzip ~/rclone.zip -d ~/;
 mv ~/rclone-v1.46-linux-amd64 ~/rclone;
-git clone https://github.com/rbsec/dnscan.git ~/bounty/tools/dnscan;
-git clone https://github.com/infosec-au/altdns.git ~/bounty/tools/altdns; 
+git clone https://github.com/rbsec/dnscan.git ~/bounty/tools/dnscan; 
 git clone https://github.com/blechschmidt/massdns.git ~/bounty/tools/massdns; 
 cd ~/bounty/tools/massdns; make; # Compiling massdns, see repo for details
 pip2 install -r ~/chomp-scan/requirements2.txt;
