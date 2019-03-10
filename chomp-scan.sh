@@ -44,8 +44,8 @@ SUBFINDER=$(command -v subfinder);
 SUBLIST3R=$(command -v sublist3r);
 SUBJACK=$(command -v subjack);
 CHROMIUM=$(command -v chromium-browser);
+ALTDNS=$(command -v goaltdns);
 DNSCAN=~/bounty/tools/dnscan/dnscan.py;
-ALTDNS=~/bounty/tools/altdns/altdns.py;
 MASSDNS_BIN=~/bounty/tools/massdns/bin/massdns;
 MASSDNS_RESOLVERS=~/bounty/tools/massdns/lists/resolvers.txt;
 AQUATONE=~/bounty/tools/aquatone/aquatone;
@@ -435,7 +435,7 @@ function run_altdns() {
 		echo -e "$GREEN""[i]$BLUE Running altdns against all $(wc -l "$WORKING_DIR"/$ALL_DOMAIN | cut -d ' ' -f 1) unique discovered subdomains to generate domains for masscan to resolve.""$NC";
 		echo -e "$GREEN""[i]$ORANGE Command: altdns.py -i $WORKING_DIR/$ALL_DOMAIN -w wordlists/altdns-words.txt -o $WORKING_DIR/altdns-output.txt -t 20.""$NC";
 		START=$(date +%s);
-		"$ALTDNS" -i "$WORKING_DIR"/$ALL_DOMAIN -w wordlists/altdns-words.txt -o "$WORKING_DIR"/altdns-output.txt -t 5
+		"$ALTDNS" -l "$WORKING_DIR"/$ALL_DOMAIN -w wordlists/altdns-words.txt -o "$WORKING_DIR"/altdns-output.txt;
 		END=$(date +%s);
 		DIFF=$(( END - START ));
 
@@ -577,13 +577,14 @@ function upload() {
 		echo -e "$ORANGE""  Upload Starting....""$NC";
 		~/rclone/rclone copy "$WORKING_DIR"/"$ALL_DOMAIN" sub:$WORKING_DIR;
 		~/rclone/rclone copy "$WORKING_DIR"/"$ALL_IP" sub:$WORKING_DIR;
-		~/rclone/rclone copy ~/"$TARGET"-subjack-output.txt sub:
+		~/rclone/rclone copy ~/"$TARGET"-subjack-output.txt sub:;
 		sleep 1;
 }
 
 function remove_dir() {
 		echo -e "$RED""  Remove target directory....""$NC";
 		rm -rf  "$WORKING_DIR"/altdns-output.txt;
+		rm -rf  "$WORKING_DIR"/massdns-result.txt;
 		sleep 1;
 }
 
