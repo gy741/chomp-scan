@@ -564,7 +564,7 @@ function run_subjack() {
 		START=$(date +%s);
 		"$SUBJACK" -d "$1" -w "$2" -t 20 -ssl -m -o "$WORKING_DIR"/subjack-ssl-output.txt -c "$HOME"/go/src/github.com/gy741/subjack/fingerprints.json;
 		"$SUBJACK" -d "$1" -w "$2" -t 20 -m -o "$WORKING_DIR"/subjack-nossl-output.txt -c "$HOME"/go/src/github.com/gy741/subjack/fingerprints.json;
-		cat "$WORKING_DIR"/subjack-ssl-output.txt "$WORKING_DIR"/subjack-nossl-output.txt | sort | uniq | grep -v "amazonaws.com" >> ~/"$TARGET"-subjack-output.txt;
+		cat "$WORKING_DIR"/subjack-ssl-output.txt "$WORKING_DIR"/subjack-nossl-output.txt | sort | uniq | grep -v -P "amazonaws.com|trafficmanager.net" >> ~/"$TARGET"-subjack-output.txt;
 		END=$(date +%s);
 		DIFF=$(( END - START ));
 
@@ -577,6 +577,8 @@ function upload() {
 		echo -e "$ORANGE""  Upload Starting....""$NC";
 		~/rclone/rclone copy "$WORKING_DIR"/"$ALL_DOMAIN" sub:$WORKING_DIR;
 		~/rclone/rclone copy "$WORKING_DIR"/"$ALL_IP" sub:$WORKING_DIR;
+		~/rclone/rclone copy "$WORKING_DIR"/subjack-ssl-output.txt" sub:$WORKING_DIR;
+		~/rclone/rclone copy "$WORKING_DIR"/subjack-nossl-output.txt" sub:$WORKING_DIR;
 		~/rclone/rclone copy ~/"$TARGET"-subjack-output.txt sub:;
 		sleep 1;
 }
