@@ -10,7 +10,7 @@ ENABLE_HTTP=
 # Set custom output directory, value are a path to a directory or blank
 OUTPUT_DIR=
 # Use all discovered domains instead of default interesting discovered domains, values are YES or blank
-USE_ALL=
+USE_ALL=YES
 # Set Notica URL parameter for notifications, values are a Notica URL parameter or blank. See notica.us for details.
 NOTICA=
 # Set custom domain blacklist file, values are a path to a file or blank
@@ -53,10 +53,10 @@ CONTENT_WORDLIST=
 # Set which tools run
 ENABLE_SUBJACK=YES
 ENABLE_CORSTEST=YES
-ENABLE_S3SCANNER=YES
-ENABLE_WHATWEB=YES
-ENABLE_WAFW00F=YES
-ENABLE_NIKTO=YES
+ENABLE_S3SCANNER=
+ENABLE_WHATWEB=
+ENABLE_WAFW00F=
+ENABLE_NIKTO=
 
 
 [port scanning]
