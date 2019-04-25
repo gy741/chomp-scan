@@ -1871,8 +1871,8 @@ function run_subjack() {
 				echo -e "$GREEN""[i]$ORANGE It will run twice, once against HTTPS and once against HTTP.""$NC";
 				echo -e "$GREEN""[i]$ORANGE Command: subjack -d $1 -w $2 -v -t 20 -ssl -m -o $WORKING_DIR/subjack-output.txt""$NC";
 				START=$(date +%s);
-				"$SUBJACK" -d "$1" -w "$2" -v -t 20 -ssl -m -o "$WORKING_DIR"/subjack-https-output.txt -c "$HOME"/go/src/github.com/haccer/subjack/fingerprints.json;
-				"$SUBJACK" -d "$1" -w "$2" -v -t 20 -m -o "$WORKING_DIR"/subjack-http-output.txt -c "$HOME"/go/src/github.com/haccer/subjack/fingerprints.json;
+				"$SUBJACK" -d "$1" -w "$2" -t 20 -ssl -m -o "$WORKING_DIR"/subjack-https-output.txt -c "$HOME"/go/src/github.com/haccer/subjack/fingerprints.json;
+				"$SUBJACK" -d "$1" -w "$2" -t 20 -m -o "$WORKING_DIR"/subjack-http-output.txt -c "$HOME"/go/src/github.com/haccer/subjack/fingerprints.json;
 				END=$(date +%s);
 				DIFF=$(( END - START ));
 		else
@@ -1880,8 +1880,8 @@ function run_subjack() {
 				echo -e "$GREEN""[i]$ORANGE It will run twice, once against HTTPS and once against HTTP.""$NC";
 				echo -e "$GREEN""[i]$ORANGE Command: subjack -d $1 -w $2 -v -t 20 -ssl -m -o $WORKING_DIR/subjack-output.txt""$NC";
 				START=$(date +%s);
-				"$SUBJACK" -d "$1" -w "$2" -v -t 20 -ssl -m -o "$WORKING_DIR"/subjack-https-output.txt -c "$HOME"/go/src/github.com/haccer/subjack/fingerprints.json;
-				"$SUBJACK" -d "$1" -w "$2" -v -t 20 -m -o "$WORKING_DIR"/subjack-http-output.txt -c "$HOME"/go/src/github.com/haccer/subjack/fingerprints.json;
+				"$SUBJACK" -d "$1" -w "$2" -t 20 -ssl -m -o "$WORKING_DIR"/subjack-https-output.txt -c "$HOME"/go/src/github.com/haccer/subjack/fingerprints.json;
+				"$SUBJACK" -d "$1" -w "$2" -t 20 -m -o "$WORKING_DIR"/subjack-http-output.txt -c "$HOME"/go/src/github.com/haccer/subjack/fingerprints.json;
 				END=$(date +%s);
 				DIFF=$(( END - START ));
 		fi
