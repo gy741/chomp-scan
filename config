@@ -46,7 +46,7 @@ ENABLE_GOBUSTER=YES
 ENABLE_DIRSEARCH=YES
 # Set wordlist
 # Possible options are SMALL, MEDIUM, LARGE, XL, XXL, or the path to a custom wordlist
-CONTENT_WORDLIST=
+CONTENT_WORDLIST=/root/chomp-scan/wordlists/content_discovery_nullenc0de.txt
 
 
 [information gathering]
