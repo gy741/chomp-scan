@@ -851,7 +851,7 @@ function run_subfinder() {
 		echo -e "$GREEN""[i]$BLUE Scanning $1 with subfinder.""$NC";
 		echo -e "$GREEN""[i]$ORANGE Command: subfinder -d $1 -o $WORKING_DIR/subfinder-domains.txt -t 25 -w $2.""$NC";
 		START=$(date +%s);
-		"$SUBFINDER" -d "$1" -o "$WORKING_DIR"/subfinder-domains.txt -t 25 -w "$2";
+		"$SUBFINDER" -d "$1" -o "$WORKING_DIR"/subfinder-domains.txt;
 		END=$(date +%s);
 		DIFF=$(( END - START ));
 		
@@ -921,7 +921,7 @@ function run_amass() {
 		echo -e "$GREEN""[i]$BLUE Scanning $1 with amass.""$NC";
 		echo -e "$GREEN""[i]$ORANGE Command: amass -d $1 -ip -rf resolvers.txt -active -o $WORKING_DIR/amass-output.txt -min-for-recursive 3""$NC";
 		START=$(date +%s);
-		"$AMASS" -d "$1" -ip -rf resolvers.txt -active -o "$WORKING_DIR"/amass-output.txt -min-for-recursive 3";
+		"$AMASS" -d "$1" -ip -rf resolvers.txt -active -o "$WORKING_DIR"/amass-output.txt -min-for-recursive 3;
 		END=$(date +%s);
 		DIFF=$(( END - START ));
 
