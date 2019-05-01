@@ -2247,7 +2247,9 @@ if [[ "$CONFIG_FILE" != "" ]]; then
 		fi
 
 		get_interesting "silent";
-
+		
+		run_del_overlap;
+		
 		## Screenshots
 		# Run aquatone
 		if [[ "$ENABLE_SCREENSHOTS" -eq 1 ]]; then
@@ -2338,8 +2340,6 @@ if [[ "$CONFIG_FILE" != "" ]]; then
 						run_nikto "$WORKING_DIR"/"$ALL_OVERLAP";
 				fi
 		fi
-
-		run_del_overlap;
 
 		## Content discovery
 		# Run inception
