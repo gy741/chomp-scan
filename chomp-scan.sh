@@ -1466,7 +1466,7 @@ function run_dirsearch() {
 				COUNT=$(wc -l "$3" | awk '{print $1}')
 				START=$(date +%s);
 				while read -r ADOMAIN; do
-						"$DIRSEARCH" -u "$HTTP"://"$ADOMAIN" -e php,aspx,asp,do,html,jsp -t 20 -x 301,302,404 -F --plain-text-report="$WORKING_DIR"/dirsearch/"$ADOMAIN".txt -w "$2";
+						"$DIRSEARCH" -u "$HTTP"://"$ADOMAIN" -e php,aspx,asp,html,jsp -t 20 -x 301,302,404 -F --plain-text-report="$WORKING_DIR"/dirsearch/"$ADOMAIN".txt -w "$2";
 						COUNT=$((COUNT - 1));
 						if [[ "$COUNT" != 0 ]]; then
 								echo -e "$GREEN""[i]$BLUE $COUNT domain(s) remaining.""$NC";
@@ -1483,7 +1483,7 @@ function run_dirsearch() {
 				COUNT=$(wc -l "$3" | awk '{print $1}')
 				START=$(date +%s);
 				while read -r ADOMAIN; do
-						"$DIRSEARCH" -u "$HTTP"://"$ADOMAIN" -e php,aspx,asp,do,html,jsp -t 20 -x 301,302,404 -F --plain-text-report="$WORKING_DIR"/dirsearch/"$ADOMAIN".txt -w "$2";
+						"$DIRSEARCH" -u "$HTTP"://"$ADOMAIN" -e php,aspx,asp,html,jsp -t 20 -x 301,302,404 -F --plain-text-report="$WORKING_DIR"/dirsearch/"$ADOMAIN".txt -w "$2";
 						COUNT=$((COUNT - 1));
 						if [[ "$COUNT" != 0 ]]; then
 								echo -e "$GREEN""[i]$BLUE $COUNT domain(s) remaining.""$NC";
