@@ -69,6 +69,8 @@ ENABLE_KNOCK=0;
 ALL_IP=all_discovered_ips.txt;
 ALL_DOMAIN=all_discovered_domains.txt;
 ALL_RESOLVED=all_resolved_domains.txt;
+ALL_OVERLAP=all_del_overlap_domains.txt;
+
 
 function set_tool_paths() {
 		# If tool paths have not been set, set them
@@ -1444,6 +1446,13 @@ function run_ffuf() {
 		done
 }
 
+function run_del_overlap() {
+		httprobe -c 30 "$WORKING_DIR"/$ALL_RESOLVED > "$WORKING_DIR"/$tmp3;
+		meg -c 30 -s 200 / "$WORKING_DIR"/$tmp3;
+		awk '{print $2}' "$WORKING_DIR"/out/index > "$WORKING_DIR"/$ALL_OVERLAP;
+
+}
+
 function run_dirsearch() {
 		# Trap SIGINT so broken dirsearch runs can be cancelled
 		trap cancel SIGINT;
@@ -2154,6 +2163,7 @@ INTERESTING_DOMAINS=interesting-domains.txt;
 touch "$WORKING_DIR"/"$ALL_DOMAIN";
 touch "$WORKING_DIR"/"$ALL_IP";
 touch "$WORKING_DIR"/"$ALL_RESOLVED";
+touch "$WORKING_DIR"/"$ALL_RESOLVED";
 
 # Check for config file and run options if it exists
 if [[ "$CONFIG_FILE" != "" ]]; then
@@ -2317,6 +2327,8 @@ if [[ "$CONFIG_FILE" != "" ]]; then
 						run_nikto "$WORKING_DIR"/"$ALL_RESOLVED";
 				fi
 		fi
+
+		run_del_overlap;
 
 		## Content discovery
 		# Run inception
