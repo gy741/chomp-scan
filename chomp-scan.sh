@@ -1967,8 +1967,8 @@ while true; do
 				   read -rp "[i] Enter S/M/L/X/2 " CHOICE;
 				   case $CHOICE in
 						   [sS]* )
-								   run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
-								   run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+								   run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
+								   run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_OVERLAP";
 								   run_s3scanner "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 								   run_bfac "$WORKING_DIR"/"$ALL_RESOLVED";
 								   run_whatweb "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
@@ -1977,8 +1977,8 @@ while true; do
 								   break;
 								   ;;
 							[mM]* )
-								   run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
-								   run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+								   run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
+								   run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_OVERLAP";
 								   run_s3scanner "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 								   run_bfac "$WORKING_DIR"/"$ALL_RESOLVED";
 								   run_whatweb "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
@@ -1987,7 +1987,7 @@ while true; do
 								   break;
 								   ;;
 							[lL]* )
-								   run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+								   run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
 								   run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 								   run_s3scanner "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 								   run_bfac "$WORKING_DIR"/"$ALL_RESOLVED";
@@ -1997,7 +1997,7 @@ while true; do
 								   break;
 								   ;;
 							[xX]* )
-								   run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+								   run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
 								   run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 								   run_s3scanner "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 								   run_bfac "$WORKING_DIR"/"$ALL_RESOLVED";
@@ -2007,7 +2007,7 @@ while true; do
 								   break;
 								   ;;
 							[2]* )
-								   run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+								   run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
 								   run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 								   run_s3scanner "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 								   run_bfac "$WORKING_DIR"/"$ALL_RESOLVED";
@@ -2258,24 +2258,24 @@ if [[ "$CONFIG_FILE" != "" ]]; then
 		# Run subjack
 		if [[ "$ENABLE_SUBJACK" -eq 1 ]]; then
 				if [[ "$USE_ALL" -eq 1 ]]; then
-						run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+						run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
 				# Make sure there are interesting domains
 				elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
-						run_subjack "$DOMAIN" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
+						run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
 				else
-						run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+						run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
 				fi
 		fi
 
 		# Run CORStest
 		if [[ "$ENABLE_CORSTEST" -eq 1 ]]; then
 				if [[ "$USE_ALL" -eq 1 ]]; then
-						run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+						run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_OVERLAP";
 				# Make sure there are interesting domains
 				elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
-						run_corstest "$DOMAIN" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
+						run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_OVERLAP";
 				else
-						run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+						run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_OVERLAP";
 				fi
 		fi
 
@@ -2306,36 +2306,36 @@ if [[ "$CONFIG_FILE" != "" ]]; then
 		# Run whatweb
 		if [[ "$ENABLE_WHATWEB" -eq 1 ]]; then
 				if [[ "$USE_ALL" -eq 1 ]]; then
-						run_whatweb "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+						run_whatweb "$DOMAIN" "$WORKING_DIR"/"$ALL_OVERLAP";
 				# Make sure there are interesting domains
 				elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
-						run_whatweb "$DOMAIN" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
+						run_whatweb "$DOMAIN" "$WORKING_DIR"/"$ALL_OVERLAP";
 				else
-						run_whatweb "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+						run_whatweb "$DOMAIN" "$WORKING_DIR"/"$ALL_OVERLAP";
 				fi
 		fi
 
 		# Run wafw00f
 		if [[ "$ENABLE_WAFW00F" -eq 1 ]]; then
 				if [[ "$USE_ALL" -eq 1 ]]; then
-						run_wafw00f "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+						run_wafw00f "$DOMAIN" "$WORKING_DIR"/"$ALL_OVERLAP";
 				# Make sure there are interesting domains
 				elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
-						run_wafw00f "$DOMAIN" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
+						run_wafw00f "$DOMAIN" "$WORKING_DIR"/"$ALL_OVERLAP";
 				else
-						run_wafw00f "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+						run_wafw00f "$DOMAIN" "$WORKING_DIR"/"$ALL_OVERLAP";
 				fi
 		fi
 
 		# Run nikto
 		if [[ "$ENABLE_NIKTO" -eq 1 ]]; then
 				if [[ "$USE_ALL" -eq 1 ]]; then
-						run_nikto "$WORKING_DIR"/"$ALL_RESOLVED";
+						run_nikto "$WORKING_DIR"/"$ALL_OVERLAP";
 				# Make sure there are interesting domains
 				elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
-						run_nikto "$WORKING_DIR"/"$INTERESTING_DOMAINS";
+						run_nikto "$WORKING_DIR"/"$ALL_OVERLAP";
 				else
-						run_nikto "$WORKING_DIR"/"$ALL_RESOLVED";
+						run_nikto "$WORKING_DIR"/"$ALL_OVERLAP";
 				fi
 		fi
 
@@ -2347,21 +2347,21 @@ if [[ "$CONFIG_FILE" != "" ]]; then
 				# Check if $SUBDOMAIN_WORDLIST is set, else use short as default
 				if [[ "$CONTENT_WORDLIST" != "" ]]; then
 						if [[ "$USE_ALL" -eq 1 ]]; then
-								run_inception "$DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$ALL_RESOLVED";
+								run_inception "$DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$ALL_OVERLAP";
 						# Make sure there are interesting domains
 						elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
-								run_inception "$DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
+								run_inception "$DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$ALL_OVERLAP";
 						else
-								run_inception "$DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$ALL_RESOLVED";
+								run_inception "$DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$ALL_OVERLAP";
 						fi
 				else
 						if [[ "$USE_ALL" -eq 1 ]]; then
-								run_inception "$DOMAIN" "$SHORT" "$WORKING_DIR"/"$ALL_RESOLVED";
+								run_inception "$DOMAIN" "$SHORT" "$WORKING_DIR"/"$ALL_OVERLAP";
 						# Make sure there are interesting domains
 						elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') != 0 ]]; then
-								run_inception "$DOMAIN" "$SHORT" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
+								run_inception "$DOMAIN" "$SHORT" "$WORKING_DIR"/"$ALL_OVERLAP";
 						else
-								run_inception "$DOMAIN" "$SHORT" "$WORKING_DIR"/"$ALL_RESOLVED";
+								run_inception "$DOMAIN" "$SHORT" "$WORKING_DIR"/"$ALL_OVERLAP";
 						fi
 				fi
 		fi
@@ -2376,21 +2376,21 @@ if [[ "$CONFIG_FILE" != "" ]]; then
 				# Check if $SUBDOMAIN_WORDLIST is set, else use short as default
 				if [[ "$CONTENT_WORDLIST" != "" ]]; then
 						if [[ "$USE_ALL" -eq 1 ]]; then
-								run_ffuf "$DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$ALL_RESOLVED";
+								run_ffuf "$DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$ALL_OVERLAP";
 						# Make sure there are interesting domains
 						elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
-								run_ffuf "$DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
+								run_ffuf "$DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$ALL_OVERLAP";
 						else
-								run_ffuf "$DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$ALL_RESOLVED";
+								run_ffuf "$DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$ALL_OVERLAP";
 						fi
 				else
 						if [[ "$USE_ALL" -eq 1 ]]; then
-								run_ffuf "$DOMAIN" "$SHORT" "$WORKING_DIR"/"$ALL_RESOLVED";
+								run_ffuf "$DOMAIN" "$SHORT" "$WORKING_DIR"/"$ALL_OVERLAP";
 						# Make sure there are interesting domains
 						elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') != 0 ]]; then
 								run_ffuf "$DOMAIN" "$SHORT" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
 						else
-								run_ffuf "$DOMAIN" "$SHORT" "$WORKING_DIR"/"$ALL_RESOLVED";
+								run_ffuf "$DOMAIN" "$SHORT" "$WORKING_DIR"/"$ALL_OVERLAP";
 						fi
 				fi
 		fi
@@ -2502,7 +2502,7 @@ if [[ "$DEFAULT_MODE" -eq 1 ]]; then
 		run_aquatone "default";
 		run_masscan;
 		run_nmap;
-		run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+		run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
 		run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 		run_s3scanner "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 		run_bfac "$WORKING_DIR"/"$ALL_RESOLVED";
@@ -2614,7 +2614,7 @@ if [[ "$INFO_GATHERING" -eq 1 ]]; then
 		unique;
 
 		if [[ "$USE_ALL" -eq 1 ]]; then
-				run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+				run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
 				run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 				run_s3scanner "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 				run_bfac "$WORKING_DIR"/"$ALL_RESOLVED";
@@ -2623,7 +2623,7 @@ if [[ "$INFO_GATHERING" -eq 1 ]]; then
 				run_nikto "$WORKING_DIR"/"$ALL_RESOLVED";
 		# Make sure there are interesting domains
 		elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
-				run_subjack "$DOMAIN" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
+				run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
 				run_corstest "$DOMAIN" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
 				run_s3scanner "$DOMAIN" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
 				run_bfac "$WORKING_DIR"/"$INTERESTING_DOMAINS";
@@ -2631,7 +2631,7 @@ if [[ "$INFO_GATHERING" -eq 1 ]]; then
 				run_wafw00f "$DOMAIN" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
 				run_nikto "$WORKING_DIR"/"$INTERESTING_DOMAINS";
 		else
-				run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+				run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
 				run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 				run_s3scanner "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 				run_bfac "$WORKING_DIR"/"$ALL_RESOLVED";
