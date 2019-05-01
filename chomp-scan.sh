@@ -2130,6 +2130,16 @@ function run_rescope() {
 		fi
 }
 
+function upload() {
+		echo -e "$ORANGE""  Upload Starting....""$NC";
+		~/rclone/rclone copy "$WORKING_DIR"/"$ALL_DOMAIN" sub:$WORKING_DIR;
+		~/rclone/rclone copy "$WORKING_DIR"/"$ALL_IP" sub:$WORKING_DIR;
+		~/rclone/rclone copy "$WORKING_DIR"/subjack-ssl-output.txt sub:$WORKING_DIR;
+		~/rclone/rclone copy "$WORKING_DIR"/subjack-nossl-output.txt sub:$WORKING_DIR;
+		~/rclone/rclone copy ~/"$TARGET"-subjack-output.txt sub:;
+		sleep 1;
+}
+
 #### Error/path/argument checking before beginning script
 
 # Check that -u domain was passed
@@ -2711,6 +2721,8 @@ fi
 # Calculate scan runtime
 SCAN_END=$(date +%s);
 SCAN_DIFF=$(( SCAN_END - SCAN_START ));
+
+upload;
 
 if [[ "$NOTICA" != "" ]]; then
 		run_notica;
