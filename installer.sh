@@ -207,7 +207,7 @@ function install_go_tools() {
 		echo -e "$GREEN""Installing subfinder from Github.""$NC";
 		go get -u github.com/subfinder/subfinder;
 		echo -e "$GREEN""Installing subjack from Github.""$NC";
-		go get -u github.com/haccer/subjack;
+		go get -u github.com/gy741/subjack;
 		echo -e "$GREEN""Installing ffuf from Github.""$NC";
 		go get -u github.com/ffuf/ffuf;
 		echo -e "$GREEN""Installing gobuster from Github.""$NC";
