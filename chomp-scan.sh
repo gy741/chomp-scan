@@ -1447,8 +1447,8 @@ function run_ffuf() {
 }
 
 function run_del_overlap() {
-		httprobe -c 30 "$WORKING_DIR"/$ALL_RESOLVED > "$WORKING_DIR"/tmp3;
-		meg -c 30 -s 200 / "$WORKING_DIR"/tmp3;
+		cat "$WORKING_DIR"/$ALL_RESOLVED | httprobe -c 30 >  > "$WORKING_DIR"/tmp3;
+		meg -c 30 -s 200 / "$WORKING_DIR"/tmp3 "$WORKING_DIR"/out;
 		awk '{print $2}' "$WORKING_DIR"/out/index > "$WORKING_DIR"/$ALL_OVERLAP;
 
 }
