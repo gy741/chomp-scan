@@ -1450,6 +1450,7 @@ function run_del_overlap() {
 		cat "$WORKING_DIR"/$ALL_RESOLVED | httprobe -c 30 >  > "$WORKING_DIR"/tmp3;
 		meg -c 30 -s 200 / "$WORKING_DIR"/tmp3 "$WORKING_DIR"/out;
 		awk '{print $2}' "$WORKING_DIR"/out/index > "$WORKING_DIR"/$ALL_OVERLAP;
+		rm -rf "$WORKING_DIR"/tmp3;
 
 }
 
@@ -2413,21 +2414,21 @@ if [[ "$CONFIG_FILE" != "" ]]; then
 				# Check if $SUBDOMAIN_WORDLIST is set, else use short as default
 				if [[ "$CONTENT_WORDLIST" != "" ]]; then
 						if [[ "$USE_ALL" -eq 1 ]]; then
-								run_dirsearch "$DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$ALL_RESOLVED";
+								run_dirsearch "$DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$ALL_OVERLAP";
 						# Make sure there are interesting domains
 						elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
 								run_dirsearch "$DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
 						else
-								run_dirsearch "$DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$ALL_RESOLVED";
+								run_dirsearch "$DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$ALL_OVERLAP";
 						fi
 				else
 						if [[ "$USE_ALL" -eq 1 ]]; then
-								run_dirsearch "$DOMAIN" "$SHORT" "$WORKING_DIR"/"$ALL_RESOLVED";
+								run_dirsearch "$DOMAIN" "$SHORT" "$WORKING_DIR"/"$ALL_OVERLAP";
 						# Make sure there are interesting domains
 						elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') != 0 ]]; then
 								run_dirsearch "$DOMAIN" "$SHORT" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
 						else
-								run_dirsearch "$DOMAIN" "$SHORT" "$WORKING_DIR"/"$ALL_RESOLVED";
+								run_dirsearch "$DOMAIN" "$SHORT" "$WORKING_DIR"/"$ALL_OVERLAP";
 						fi
 				fi
 		fi
