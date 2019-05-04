@@ -874,8 +874,8 @@ function run_sublist3r() {
 		echo -e "$GREEN""[i]$BLUE Scanning $1 with sublist3r.""$NC";
 		echo -e "$GREEN""[i]$ORANGE Command: $SUBLIST3R -d $1 -v -b -t 50 -o $WORKING_DIR/sublist3r-output.txt.""$NC";
 		START=$(date +%s);
-		# "$SUBLIST3R" -d "$1" -v -o "$WORKING_DIR"/sublist3r-output.txt
-		"$SUBLIST3R" -d "$1" -v -b -t 50 -o "$WORKING_DIR"/sublist3r-output.txt
+		"$SUBLIST3R" -d "$1" -v -o "$WORKING_DIR"/sublist3r-output.txt
+		# "$SUBLIST3R" -d "$1" -v -b -t 50 -o "$WORKING_DIR"/sublist3r-output.txt
 		END=$(date +%s);
 		DIFF=$(( END - START ));
 
@@ -2183,16 +2183,6 @@ touch "$WORKING_DIR"/"$ALL_RESOLVED";
 if [[ "$CONFIG_FILE" != "" ]]; then
 		echo -e "$GREEN""Beginning scan with config file options.""$NC";
 		sleep 0.5;
-		
-		# Run amass
-		if [[ "$ENABLE_AMASS" -eq 1 ]]; then
-				# Check if $SUBDOMAIN_WORDLIST is set, else use short as default
-				if [[ "$SUBDOMAIN_WORDLIST" != "" ]]; then
-						run_amass "$DOMAIN" "$SUBDOMAIN_WORDLIST";
-				else
-						run_amass "$DOMAIN" "$SHORT";
-				fi
-		fi
 
 		## Subdomain enumeration
 		# Run dnscan
@@ -2229,6 +2219,17 @@ if [[ "$CONFIG_FILE" != "" ]]; then
 						run_knock "$DOMAIN" "$SHORT";
 				fi
 		fi
+
+		# Run amass
+		if [[ "$ENABLE_AMASS" -eq 1 ]]; then
+				# Check if $SUBDOMAIN_WORDLIST is set, else use short as default
+				if [[ "$SUBDOMAIN_WORDLIST" != "" ]]; then
+						run_amass "$DOMAIN" "$SUBDOMAIN_WORDLIST";
+				else
+						run_amass "$DOMAIN" "$SHORT";
+				fi
+		fi
+
 
 		# Run masscan and/or goaltdns
 		if [[ "$ENABLE_MASSDNS" -eq 1 ]]; then # Masscan will always run in order to get resolved domains
