@@ -223,7 +223,7 @@ function install_go_tools() {
 		echo -e "$GREEN""Installing httprobe from Github.""$NC";
 		go get -u github.com/tomnomnom/httprobe;
 		echo -e "$GREEN""Installing meg from Github.""$NC";
-		go get -u github.com/tomnomnom/meg;
+		go get -u github.com/gy741/meg;
 }
 
 function install_go() {
