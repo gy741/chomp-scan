@@ -67,4 +67,4 @@ ENABLE_NMAP=
 
 [screenshots]
 # Enable aquatone
-ENABLE_SCREENSHOTS=
+ENABLE_SCREENSHOTS=YES
