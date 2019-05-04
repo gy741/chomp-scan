@@ -924,8 +924,8 @@ function run_amass() {
 		echo -e "$GREEN""[i]$BLUE Scanning $1 with amass.""$NC";
 		echo -e "$GREEN""[i]$ORANGE Command: amass -d $1 -ip -rf resolvers.txt -active -o $WORKING_DIR/amass-output.txt -min-for-recursive 3""$NC";
 		START=$(date +%s);
-		# "$AMASS" -d "$1" -ip -rf resolvers.txt -active -o "$WORKING_DIR"/amass-output.txt -min-for-recursive 3;
-		"$AMASS" -d "$1" -w "$2" -ip -rf resolvers.txt -active -o "$WORKING_DIR"/amass-output.txt -min-for-recursive 3 -bl "$BLACKLIST";
+		"$AMASS" -d "$1" -ip -rf resolvers.txt -active -o "$WORKING_DIR"/amass-output.txt -min-for-recursive 3;
+		# "$AMASS" -d "$1" -w "$2" -ip -rf resolvers.txt -active -o "$WORKING_DIR"/amass-output.txt -min-for-recursive 3 -bl "$BLACKLIST";
 		END=$(date +%s);
 		DIFF=$(( END - START ));
 
@@ -2183,6 +2183,16 @@ touch "$WORKING_DIR"/"$ALL_RESOLVED";
 if [[ "$CONFIG_FILE" != "" ]]; then
 		echo -e "$GREEN""Beginning scan with config file options.""$NC";
 		sleep 0.5;
+		
+		# Run amass
+		if [[ "$ENABLE_AMASS" -eq 1 ]]; then
+				# Check if $SUBDOMAIN_WORDLIST is set, else use short as default
+				if [[ "$SUBDOMAIN_WORDLIST" != "" ]]; then
+						run_amass "$DOMAIN" "$SUBDOMAIN_WORDLIST";
+				else
+						run_amass "$DOMAIN" "$SHORT";
+				fi
+		fi
 
 		## Subdomain enumeration
 		# Run dnscan
@@ -2217,16 +2227,6 @@ if [[ "$CONFIG_FILE" != "" ]]; then
 						run_knock "$DOMAIN" "$SUBDOMAIN_WORDLIST";
 				else
 						run_knock "$DOMAIN" "$SHORT";
-				fi
-		fi
-
-		# Run amass
-		if [[ "$ENABLE_AMASS" -eq 1 ]]; then
-				# Check if $SUBDOMAIN_WORDLIST is set, else use short as default
-				if [[ "$SUBDOMAIN_WORDLIST" != "" ]]; then
-						run_amass "$DOMAIN" "$SUBDOMAIN_WORDLIST";
-				else
-						run_amass "$DOMAIN" "$SHORT";
 				fi
 		fi
 
