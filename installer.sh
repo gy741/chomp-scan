@@ -240,10 +240,10 @@ function install_amass() {
 		if [[ -d "$TOOLS"/amass ]]; then
 				rm -rf "$TOOLS"/amass;
 		fi
-		echo -e "$GREEN""Installing amass 2.9.8 from Github.""$NC";
-		wget https://github.com/OWASP/Amass/releases/download/2.9.8/amass_2.9.8_linux_amd64.zip -O "$TOOLS"/amass.zip;
+		echo -e "$GREEN""Installing amass 2.9.10 from Github.""$NC";
+		wget https://github.com/OWASP/Amass/releases/download/2.9.10/amass_2.9.10_linux_amd64.zip -O "$TOOLS"/amass.zip;
 		unzip -o "$TOOLS"/amass.zip -d "$TOOLS";
-		mv "$TOOLS"/amass_2.9.8_linux_amd64 "$TOOLS"/amass;
+		mv "$TOOLS"/amass_2.9.10_linux_amd64 "$TOOLS"/amass;
 		rm "$TOOLS"/amass.zip;
 }
 
