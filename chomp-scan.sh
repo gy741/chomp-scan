@@ -2469,6 +2469,9 @@ if [[ "$CONFIG_FILE" != "" ]]; then
 		# Calculate scan runtime
 		SCAN_END=$(date +%s);
 		SCAN_DIFF=$(( SCAN_END - SCAN_START ));
+		
+		upload;
+		
 		if [[ "$NOTICA" != "" ]]; then
 				run_notica;
 		fi
