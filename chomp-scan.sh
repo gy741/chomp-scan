@@ -2137,9 +2137,9 @@ function upload() {
 		echo -e "$ORANGE""  Upload Starting....""$NC";
 		~/rclone/rclone copy "$WORKING_DIR"/"$ALL_DOMAIN" sub:$WORKING_DIR;
 		~/rclone/rclone copy "$WORKING_DIR"/"$ALL_IP" sub:$WORKING_DIR;
-		~/rclone/rclone copy "$WORKING_DIR"/subjack-ssl-output.txt sub:$WORKING_DIR;
-		~/rclone/rclone copy "$WORKING_DIR"/subjack-nossl-output.txt sub:$WORKING_DIR;
-		~/rclone/rclone copy ~/"$TARGET"-subjack-output.txt sub:;
+		~/rclone/rclone copy "$WORKING_DIR"/subjack-http-output.txt sub:$WORKING_DIR;
+		~/rclone/rclone copy "$WORKING_DIR"/subjack-https-output.txt sub:$WORKING_DIR;
+		# ~/rclone/rclone copy ~/"$TARGET"-subjack-output.txt sub:;
 		sleep 1;
 }
 
@@ -2253,12 +2253,6 @@ if [[ "$CONFIG_FILE" != "" ]]; then
 		get_interesting "silent";
 		
 		run_del_overlap;
-		
-		## Screenshots
-		# Run aquatone
-		if [[ "$ENABLE_SCREENSHOTS" -eq 1 ]]; then
-				run_aquatone "default";
-		fi
 
 		## Information gathering
 		# Run subjack
@@ -2295,6 +2289,12 @@ if [[ "$CONFIG_FILE" != "" ]]; then
 				else
 						run_s3scanner "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 				fi
+		fi
+		
+		## Screenshots
+		# Run aquatone
+		if [[ "$ENABLE_SCREENSHOTS" -eq 1 ]]; then
+				run_aquatone "default";
 		fi
 
 		# Run bfac
