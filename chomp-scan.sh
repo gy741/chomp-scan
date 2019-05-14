@@ -71,6 +71,9 @@ ALL_DOMAIN=all_discovered_domains.txt;
 ALL_RESOLVED=all_resolved_domains.txt;
 ALL_OVERLAP=all_del_overlap_domains.txt;
 
+# upload setting
+TARGET=$(cat /etc/hostname);
+
 
 function set_tool_paths() {
 		# If tool paths have not been set, set them
@@ -1886,6 +1889,7 @@ function run_subjack() {
 				START=$(date +%s);
 				"$SUBJACK" -d "$1" -w "$2" -t 20 -ssl -m -o "$WORKING_DIR"/subjack-https-output.txt -c "$HOME"/go/src/github.com/gy741/subjack/fingerprints.json;
 				"$SUBJACK" -d "$1" -w "$2" -t 20 -m -o "$WORKING_DIR"/subjack-http-output.txt -c "$HOME"/go/src/github.com/gy741/subjack/fingerprints.json;
+				cat "$WORKING_DIR"/subjack-https-output.txt "$WORKING_DIR"/subjack-http-output.txt | sort | uniq | grep -v -P "amazonaws.com|trafficmanager.net" >> ~/"$TARGET"-subjack-output.txt;
 				END=$(date +%s);
 				DIFF=$(( END - START ));
 		else
@@ -1895,6 +1899,7 @@ function run_subjack() {
 				START=$(date +%s);
 				"$SUBJACK" -d "$1" -w "$2" -t 20 -ssl -m -o "$WORKING_DIR"/subjack-https-output.txt -c "$HOME"/go/src/github.com/gy741/subjack/fingerprints.json;
 				"$SUBJACK" -d "$1" -w "$2" -t 20 -m -o "$WORKING_DIR"/subjack-http-output.txt -c "$HOME"/go/src/github.com/gy741/subjack/fingerprints.json;
+				cat "$WORKING_DIR"/subjack-https-output.txt "$WORKING_DIR"/subjack-http-output.txt | sort | uniq | grep -v -P "amazonaws.com|trafficmanager.net" >> ~/"$TARGET"-subjack-output.txt;
 				END=$(date +%s);
 				DIFF=$(( END - START ));
 		fi
