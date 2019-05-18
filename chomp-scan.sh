@@ -1076,7 +1076,7 @@ function run_aquatone () {
 						mkdir "$WORKING_DIR"/aquatone;
 						echo -e "$BLUE""[i] Running aquatone against all $(wc -l "$WORKING_DIR"/$ALL_RESOLVED | awk '{print $1}') unique discovered subdomains.""$NC";
 						START=$(date +%s);
-						$AQUATONE -threads 10 -chrome-path "$CHROMIUM" -ports medium -out "$WORKING_DIR"/aquatone < "$WORKING_DIR"/$ALL_RESOLVED;
+						$AQUATONE -threads 10 -chrome-path "$CHROMIUM" -ports medium -out "$WORKING_DIR"/aquatone < "$WORKING_DIR"/$ALL_OVERLAP;
 						END=$(date +%s);
 						DIFF=$(( END - START ));
 						echo -e "$GREEN""[i]$BLUE Aquatone took $DIFF seconds to run.""$NC";
@@ -1084,7 +1084,7 @@ function run_aquatone () {
 						mkdir "$WORKING_DIR"/aquatone;
 						echo -e "$BLUE""[i] Running aquatone against all $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') interesting discovered subdomains.""$NC";
 						START=$(date +%s);
-						$AQUATONE -threads 10 -chrome-path "$CHROMIUM" -ports medium -out "$WORKING_DIR"/aquatone < "$WORKING_DIR"/"$INTERESTING_DOMAINS";
+						$AQUATONE -threads 10 -chrome-path "$CHROMIUM" -ports medium -out "$WORKING_DIR"/aquatone < "$WORKING_DIR"/"$ALL_OVERLAP";
 						END=$(date +%s);
 						DIFF=$(( END - START ));
 						echo -e "$GREEN""[i]$BLUE Aquatone took $DIFF seconds to run.""$NC";
@@ -1092,7 +1092,7 @@ function run_aquatone () {
 						mkdir "$WORKING_DIR"/aquatone;
 						echo -e "$BLUE""[i] Running aquatone against all $(wc -l "$WORKING_DIR"/$ALL_RESOLVED | awk '{print $1}') unique discovered subdomains.""$NC";
 						START=$(date +%s);
-						$AQUATONE -threads 10 -chrome-path "$CHROMIUM" -ports medium -out "$WORKING_DIR"/aquatone < "$WORKING_DIR"/$ALL_RESOLVED;
+						$AQUATONE -threads 10 -chrome-path "$CHROMIUM" -ports medium -out "$WORKING_DIR"/aquatone < "$WORKING_DIR"/$ALL_OVERLAP;
 						END=$(date +%s);
 						DIFF=$(( END - START ));
 						echo -e "$GREEN""[i]$BLUE Aquatone took $DIFF seconds to run.""$NC";
