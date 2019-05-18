@@ -1966,7 +1966,7 @@ while true; do
 				   read -rp "[i] Enter S/M/L/X/2 " CHOICE;
 				   case $CHOICE in
 						   [sS]* )
-								   run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+								   run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
 								   run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 								   run_s3scanner "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 								   run_bfac "$WORKING_DIR"/"$ALL_RESOLVED";
@@ -1976,7 +1976,7 @@ while true; do
 								   break;
 								   ;;
 							[mM]* )
-								   run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+								   run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
 								   run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 								   run_s3scanner "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 								   run_bfac "$WORKING_DIR"/"$ALL_RESOLVED";
@@ -1986,7 +1986,7 @@ while true; do
 								   break;
 								   ;;
 							[lL]* )
-								   run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+								   run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
 								   run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 								   run_s3scanner "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 								   run_bfac "$WORKING_DIR"/"$ALL_RESOLVED";
@@ -1996,7 +1996,7 @@ while true; do
 								   break;
 								   ;;
 							[xX]* )
-								   run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+								   run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
 								   run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 								   run_s3scanner "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 								   run_bfac "$WORKING_DIR"/"$ALL_RESOLVED";
@@ -2006,7 +2006,7 @@ while true; do
 								   break;
 								   ;;
 							[2]* )
-								   run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+								   run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
 								   run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 								   run_s3scanner "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 								   run_bfac "$WORKING_DIR"/"$ALL_RESOLVED";
@@ -2528,12 +2528,12 @@ if [[ "$CONFIG_FILE" != "" ]]; then
 				# Run subjack
 				if [[ "$ENABLE_SUBJACK" -eq 1 ]]; then
 						if [[ "$USE_ALL" -eq 1 ]]; then
-								run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+								run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
 						# Make sure there are interesting domains
 						elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
-								run_subjack "$DOMAIN" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
+								run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
 						else
-								run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+								run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
 						fi
 				fi
 
@@ -2801,7 +2801,7 @@ if [[ "$DEFAULT_MODE" -eq 1 ]]; then
 		run_aquatone "default";
 		run_masscan;
 		run_nmap;
-		run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+		run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
 		run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 		run_s3scanner "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 		run_bfac "$WORKING_DIR"/"$ALL_RESOLVED";
