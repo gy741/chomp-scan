@@ -1473,7 +1473,7 @@ function run_ffuf() {
 
 function run_del_overlap() {
 		echo -e "$GREEN""[i]$ORANGE Command: meg start.""$NC";
-		cat "$WORKING_DIR"/$ALL_RESOLVED | httprobe -c 30 > "$WORKING_DIR"/tmp3;
+		cat "$WORKING_DIR"/$ALL_DOMAIN | httprobe -c 30 > "$WORKING_DIR"/tmp3;
 		meg -c 30 -s 200 / "$WORKING_DIR"/tmp3 "$WORKING_DIR"/out;
 		awk '{print $2}' "$WORKING_DIR"/out/index > "$WORKING_DIR"/tmp3;
 		sed -e 's/https://g' -e 's/http://g' -e 's/\///g' "$WORKING_DIR"/tmp3 | sort | uniq > "$WORKING_DIR"/$ALL_OVERLAP;
