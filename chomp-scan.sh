@@ -27,6 +27,7 @@ SCREENSHOTS=0;
 INFO_GATHERING=0;
 PORTSCANNING=0;
 HTTP="https"
+CUSTOM_WORKING_DIR="";
 WORKING_DIR="";
 BLACKLIST=blacklist.txt;
 INTERACTIVE=0;
@@ -216,6 +217,16 @@ function parse_config() {
 		if [[ "$DOMAIN" == "" ]]; then
 				echo -e "$RED""[!] No domain was provided in the configuration file.""$NC";
 				exit 1;
+		else
+				DOMAIN_COUNT=$(echo $DOMAIN | awk --field-separator="," "{ print NF }")
+				if [[ "$DOMAIN_COUNT" -gt 1 ]]; then
+						DOMAIN_ARRAY=();
+						for (( i=1; i<=$DOMAIN_COUNT; i++ )); do
+								DOMAIN_ARRAY+=($(echo $DOMAIN | cut -d ',' -f $i));
+						done
+						# REMOVE
+						echo "${DOMAIN_ARRAY[@]}";
+				fi
 		fi
 
 		if [[ $(grep '^ENABLE_HTTP' "$CONFIG_FILE" | cut -d '=' -f 2) == "YES" ]]; then
