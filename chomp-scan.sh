@@ -99,6 +99,7 @@ function set_tool_paths() {
 				SUBLIST3R=$TOOL_PATH/Sublist3r/sublist3r.py;
 				DNSCAN=$TOOL_PATH/dnscan/dnscan.py;
 				MASSDNS_BIN=$TOOL_PATH/massdns/bin/massdns;
+				MASSDNS_BRUTE=$TOOL_PATH/massdns/scripts/subbrute.py;
 				MASSDNS_RESOLVERS=resolvers.txt;
 				AQUATONE=$TOOL_PATH/aquatone/aquatone;
 				BFAC=$TOOL_PATH/bfac/bfac;
@@ -983,6 +984,7 @@ function run_massdns() {
 				echo -e "$GREEN""[i]$ORANGE Command: cat (all found domains and IPs) | $MASSDNS_BIN -r $MASSDNS_RESOLVERS -q -t A -o S -w $WORKING_DIR/massdns-result.txt.""$NC";
 				START=$(date +%s);
 				cat "$WORKING_DIR"/$ALL_DOMAIN "$WORKING_DIR"/$ALL_IP "$WORKING_DIR"/massdns-appended.txt | sort | uniq | $MASSDNS_BIN -r $MASSDNS_RESOLVERS -q -t A -o S -w "$WORKING_DIR"/massdns-result.txt;
+				$MASSDNS_BRUTE $3 $1 | $MASSDNS_BIN -r $MASSDNS_RESOLVERS -t A -o S -w massdns_brute_output.txt 
 				END=$(date +%s);
 				DIFF=$(( END - START ));
 		else
@@ -996,6 +998,7 @@ function run_massdns() {
 				echo -e "$GREEN""[i]$ORANGE Command: cat (all found domains and IPs) | $MASSDNS_BIN -r $MASSDNS_RESOLVERS -q -t A -o S -w $WORKING_DIR/massdns-result.txt.""$NC";
 				START=$(date +%s);
 				cat "$WORKING_DIR"/$ALL_DOMAIN "$WORKING_DIR"/$ALL_IP "$WORKING_DIR"/goaltdns-output.txt "$WORKING_DIR"/massdns-appended.txt | sort | uniq | $MASSDNS_BIN -r $MASSDNS_RESOLVERS -q -t A -o S -w "$WORKING_DIR"/massdns-result.txt;
+				$MASSDNS_BRUTE $3 $1 | $MASSDNS_BIN -r $MASSDNS_RESOLVERS -t A -o S -w massdns_brute_output.txt 
 				END=$(date +%s);
 				DIFF=$(( END - START ));
 		fi
