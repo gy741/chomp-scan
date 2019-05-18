@@ -1,0 +1,70 @@
+# Possible values for tools are case-sensitive YES or blank.
+# Wordlist values are either blank, a built-in wordlist name, or a path to a file.
+
+
+[general]
+# Set domain to scan (required). Do not include a scheme, e.g. https:// or http://. Chomp Scan will add the appropriate scheme as needed.
+DOMAIN=
+# Use HTTP instead of default HTTPS, values are YES or blank
+ENABLE_HTTP=
+# Set custom output directory, value are a path to a directory or blank
+OUTPUT_DIR=
+# Use all discovered domains instead of default interesting discovered domains, values are YES or blank
+USE_ALL=YES
+# Set Notica URL parameter for notifications, values are a Notica URL parameter or blank. See notica.us for details.
+NOTICA=
+# Set custom domain blacklist file, values are a path to a file or blank
+BLACKLIST=
+# Set custom interesting word list, values are a path to a file or blank
+INTERESTING=
+# Set custom path to tools. This should be a fully qualified path to the directory that contains the downloaded tools from Github
+TOOL_PATH=
+# Enable parsing resolved domains into a Burp-formatted JSON file
+ENABLE_RESCOPE=YES
+
+
+[subdomain enumeration]
+# Set which tools run
+ENABLE_DNSCAN=YES
+ENABLE_SUBFINDER=YES
+ENABLE_SUBLIST3R=YES
+ENABLE_KNOCK=
+ENABLE_AMASS=YES
+ENABLE_GOALTDNS=YES
+# Set wordlist
+# Possible options are SHORT, lONG, HUGE, or the path to a custom wordlist
+SUBDOMAIN_WORDLIST=
+
+
+[content discovery]
+# Set which tools run
+ENABLE_INCEPTION=
+ENABLE_BFAC=
+ENABLE_WAYBACKURLS=
+ENABLE_FFUF=
+ENABLE_GOBUSTER=
+ENABLE_DIRSEARCH=
+# Set wordlist
+# Possible options are SMALL, MEDIUM, LARGE, XL, XXL, or the path to a custom wordlist
+CONTENT_WORDLIST=/root/chomp-scan/wordlists/content_discovery_nullenc0de.txt
+
+
+[information gathering]
+# Set which tools run
+ENABLE_SUBJACK=YES
+ENABLE_CORSTEST=YES
+ENABLE_S3SCANNER=
+ENABLE_WHATWEB=
+ENABLE_WAFW00F=
+ENABLE_NIKTO=
+
+
+[port scanning]
+# Set which tools run
+ENABLE_MASSCAN=
+ENABLE_NMAP=
+
+
+[screenshots]
+# Enable aquatone
+ENABLE_SCREENSHOTS=YES
