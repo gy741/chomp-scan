@@ -25,15 +25,15 @@ ENABLE_RESCOPE=YES
 
 [subdomain enumeration]
 # Set which tools run
-ENABLE_DNSCAN=YES
+ENABLE_DNSCAN=
 ENABLE_SUBFINDER=YES
 ENABLE_SUBLIST3R=YES
 ENABLE_KNOCK=
 ENABLE_AMASS=YES
 ENABLE_GOALTDNS=YES
 # Set wordlist
-# Possible options are SHORT, lONG, HUGE, or the path to a custom wordlist
-SUBDOMAIN_WORDLIST=
+# Possible options are SHORT, lONG, HUGE, BRUTE or the path to a custom wordlist
+SUBDOMAIN_WORDLIST=BRUTE
 
 
 [content discovery]
