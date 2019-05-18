@@ -2147,6 +2147,18 @@ function run_rescope() {
 		fi
 }
 
+function upload() {
+		echo -e "$ORANGE""  Upload Starting....""$NC";
+		~/rclone/rclone copy "$WORKING_DIR"/"$ALL_DOMAIN" sub:$WORKING_DIR;
+		~/rclone/rclone copy "$WORKING_DIR"/"$ALL_IP" sub:$WORKING_DIR;
+		~/rclone/rclone copy "$WORKING_DIR"/"$ALL_RESOLVED" sub:$WORKING_DIR;
+		~/rclone/rclone copy "$WORKING_DIR"/"$ALL_OVERLAP" sub:$WORKING_DIR;
+		~/rclone/rclone copy "$WORKING_DIR"/subjack-http-output.txt sub:$WORKING_DIR;
+		~/rclone/rclone copy "$WORKING_DIR"/subjack-https-output.txt sub:$WORKING_DIR;
+		~/rclone/rclone copy ~/"$TARGET"-subjack-output.txt sub:;
+		sleep 1;
+}
+
 #### Begin main script functions
 
 # Check tool paths are set
