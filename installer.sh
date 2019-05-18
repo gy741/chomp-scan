@@ -283,6 +283,8 @@ wget https://downloads.rclone.org/v1.46/rclone-v1.46-linux-amd64.zip -O ~/rclone
 unzip ~/rclone.zip -d ~/;
 mv ~/rclone-v1.46-linux-amd64 ~/rclone;
 
+wget -O ~/chomp-scan/wordlists/all.txt https://gist.github.com/jhaddix/86a06c5dc309d08580a018c66354a056/raw/96f4e51d96b2203f19f6381c8c545b278eaa0837/all.txt
+
 echo -e "$GREEN""Please run 'source ~/.profile' to add the Go binary path to your \$PATH variable, then run Chomp Scan.""$NC";
 echo -e "$ORANGE""Note: In order to use S3Scanner, you must configure your personal AWS credentials in the aws CLI tool.""$NC";
 echo -e "$ORANGE""See https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html for details.""$NC";
