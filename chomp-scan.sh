@@ -2179,6 +2179,7 @@ if [[ "$CONFIG_FILE" != "" ]]; then
 								touch "$WORKING_DIR"/"$ALL_DOMAIN";
 								touch "$WORKING_DIR"/"$ALL_IP";
 								touch "$WORKING_DIR"/"$ALL_RESOLVED";
+								touch "$WORKING_DIR"/"$ALL_OVERLAP";
 						else
 								WORKING_DIR="$CUSTOM_WORKING_DIR"/"$ARRAY_DOMAIN"-$(date +%T);
 								mkdir -p "$WORKING_DIR";
@@ -2187,6 +2188,7 @@ if [[ "$CONFIG_FILE" != "" ]]; then
 								touch "$WORKING_DIR"/"$ALL_DOMAIN";
 								touch "$WORKING_DIR"/"$ALL_IP";
 								touch "$WORKING_DIR"/"$ALL_RESOLVED";
+								touch "$WORKING_DIR"/"$ALL_OVERLAP";
 						fi
 						SCAN_START=$(date +%s);
 						echo "$ARRAY_DOMAIN";
@@ -2808,6 +2810,8 @@ INTERESTING_DOMAINS=interesting-domains.txt;
 touch "$WORKING_DIR"/"$ALL_DOMAIN";
 touch "$WORKING_DIR"/"$ALL_IP";
 touch "$WORKING_DIR"/"$ALL_RESOLVED";
+touch "$WORKING_DIR"/"$ALL_OVERLAP";
+
 
 # Check for -D non-interactive default flag
 # Defaults for non-interactive:
