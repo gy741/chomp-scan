@@ -33,7 +33,7 @@ ENABLE_AMASS=YES
 ENABLE_GOALTDNS=YES
 # Set wordlist
 # Possible options are SHORT, lONG, HUGE, BRUTE or the path to a custom wordlist
-SUBDOMAIN_WORDLIST=BRUTE
+SUBDOMAIN_WORDLIST=
 
 
 [content discovery]
