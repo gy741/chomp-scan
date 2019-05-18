@@ -43,7 +43,7 @@ ENABLE_BFAC=
 ENABLE_WAYBACKURLS=
 ENABLE_FFUF=
 ENABLE_GOBUSTER=
-ENABLE_DIRSEARCH=YES
+ENABLE_DIRSEARCH=
 # Set wordlist
 # Possible options are SMALL, MEDIUM, LARGE, XL, XXL, or the path to a custom wordlist
 CONTENT_WORDLIST=/root/chomp-scan/wordlists/content_discovery_nullenc0de.txt
