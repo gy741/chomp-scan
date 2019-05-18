@@ -325,6 +325,9 @@ function parse_config() {
 				HUGE )
 						SUBDOMAIN_WORDLIST="$HUGE";
 						;;
+				BRUTE )
+						SUBDOMAIN_WORDLIST="$BRUTE";
+						;;		
 		esac
 		if [[ "$SUBDOMAIN_WORDLIST" == "" ]]; then
 				if [[ "$SUB_WORDLIST" != "" ]]; then
@@ -985,8 +988,8 @@ function run_massdns() {
 				echo -e "$GREEN""[i]$ORANGE Command: cat (all found domains and IPs) | $MASSDNS_BIN -r $MASSDNS_RESOLVERS -q -t A -o S -w $WORKING_DIR/massdns-result.txt.""$NC";
 				START=$(date +%s);
 				cat "$WORKING_DIR"/$ALL_DOMAIN "$WORKING_DIR"/$ALL_IP "$WORKING_DIR"/massdns-appended.txt | sort | uniq | $MASSDNS_BIN -r $MASSDNS_RESOLVERS -q -t A -o S -w "$WORKING_DIR"/massdns-result.txt;
-				$MASSDNS_BRUTE $BRUTE $1 | $MASSDNS_BIN -r $MASSDNS_RESOLVERS -t A -o S -w "$WORKING_DIR"/massdns_brute_output.txt; 
-				cat "$WORKING_DIR"/massdns_brute_output.txt >> "$WORKING_DIR"/massdns-result.txt;
+				# $MASSDNS_BRUTE $BRUTE $1 | $MASSDNS_BIN -r $MASSDNS_RESOLVERS -t A -o S -w "$WORKING_DIR"/massdns_brute_output.txt; 
+				# cat "$WORKING_DIR"/massdns_brute_output.txt >> "$WORKING_DIR"/massdns-result.txt;
 				END=$(date +%s);
 				DIFF=$(( END - START ));
 		else
@@ -1000,8 +1003,8 @@ function run_massdns() {
 				echo -e "$GREEN""[i]$ORANGE Command: cat (all found domains and IPs) | $MASSDNS_BIN -r $MASSDNS_RESOLVERS -q -t A -o S -w $WORKING_DIR/massdns-result.txt.""$NC";
 				START=$(date +%s);
 				cat "$WORKING_DIR"/$ALL_DOMAIN "$WORKING_DIR"/$ALL_IP "$WORKING_DIR"/goaltdns-output.txt "$WORKING_DIR"/massdns-appended.txt | sort | uniq | $MASSDNS_BIN -r $MASSDNS_RESOLVERS -q -t A -o S -w "$WORKING_DIR"/massdns-result.txt;
-				$MASSDNS_BRUTE $BRUTE $1 | $MASSDNS_BIN -r $MASSDNS_RESOLVERS -t A -o S -w "$WORKING_DIR"/massdns_brute_output.txt; 
-				cat "$WORKING_DIR"/massdns_brute_output.txt >> "$WORKING_DIR"/massdns-result.txt;
+				# $MASSDNS_BRUTE $BRUTE $1 | $MASSDNS_BIN -r $MASSDNS_RESOLVERS -t A -o S -w "$WORKING_DIR"/massdns_brute_output.txt; 
+				# cat "$WORKING_DIR"/massdns_brute_output.txt >> "$WORKING_DIR"/massdns-result.txt;
 				END=$(date +%s);
 				DIFF=$(( END - START ));
 		fi
