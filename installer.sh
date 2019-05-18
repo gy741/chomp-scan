@@ -204,7 +204,7 @@ function install_knockpy() {
 function install_go_tools() {
 		source $HOME/.profile;
 		echo -e "$GREEN""Installing Go tools from Github.""$NC";
-		sleep 5;
+		sleep 1;
 		echo -e "$GREEN""Installing subfinder from Github.""$NC";
 		go get -u github.com/subfinder/subfinder;
 		echo -e "$GREEN""Installing subjack from Github.""$NC";
@@ -242,7 +242,7 @@ function install_amass() {
 				rm -rf "$TOOLS"/amass;
 		fi
 		echo -e "$GREEN""Installing amass 2.9.10 from Github.""$NC";
-		wget https://github.com/OWASP/Amass/releases/download/2.9.10/amass_2.9.10_linux_amd64.zip -O "$TOOLS"/amass.zip;
+		wget https://github.com/OWASP/Amass/releases/download/2.9.11/amass_2.9.11_linux_amd64.zip -O "$TOOLS"/amass.zip;
 		unzip -o "$TOOLS"/amass.zip -d "$TOOLS";
 		mv "$TOOLS"/amass_2.9.10_linux_amd64 "$TOOLS"/amass;
 		rm "$TOOLS"/amass.zip;
