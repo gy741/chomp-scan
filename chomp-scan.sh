@@ -100,7 +100,7 @@ function set_tool_paths() {
 				DNSCAN=$TOOL_PATH/dnscan/dnscan.py;
 				MASSDNS_BIN=$TOOL_PATH/massdns/bin/massdns;
 				MASSDNS_BRUTE=$TOOL_PATH/massdns/scripts/subbrute.py;
-				MASSDNS_RESOLVERS=resolvers.txt;
+				MASSDNS_RESOLVERS=resolvers3.txt;
 				AQUATONE=$TOOL_PATH/aquatone/aquatone;
 				BFAC=$TOOL_PATH/bfac/bfac;
 				DIRSEARCH=$TOOL_PATH/dirsearch/dirsearch.py;
