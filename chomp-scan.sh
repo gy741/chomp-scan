@@ -70,11 +70,6 @@ ENABLE_KNOCK=0;
 ALL_IP=all_discovered_ips.txt;
 ALL_DOMAIN=all_discovered_domains.txt;
 ALL_RESOLVED=all_resolved_domains.txt;
-ALL_OVERLAP=all_del_overlap_domains.txt;
-
-# upload setting
-TARGET=$(cat /etc/hostname);
-
 
 function set_tool_paths() {
 		# If tool paths have not been set, set them
@@ -218,14 +213,12 @@ function parse_config() {
 				echo -e "$RED""[!] No domain was provided in the configuration file.""$NC";
 				exit 1;
 		else
-				DOMAIN_COUNT=$(echo $DOMAIN | awk --field-separator="," "{ print NF }")
+				DOMAIN_COUNT=$(echo "$DOMAIN" | awk --field-separator="," "{ print NF }")
 				if [[ "$DOMAIN_COUNT" -gt 1 ]]; then
 						DOMAIN_ARRAY=();
 						for (( i=1; i<=$DOMAIN_COUNT; i++ )); do
-								DOMAIN_ARRAY+=($(echo $DOMAIN | cut -d ',' -f $i));
+								DOMAIN_ARRAY+=($(echo $DOMAIN | cut -d ',' -f $i | tr -d " "));
 						done
-						# REMOVE
-						echo "${DOMAIN_ARRAY[@]}";
 				fi
 		fi
 
@@ -236,7 +229,7 @@ function parse_config() {
 		OUTPUT_DIR=$(grep '^OUTPUT_DIR' "$CONFIG_FILE" | cut -d '=' -f 2);
 		if [[ "$OUTPUT_DIR" != "" ]]; then
 				if [[ -w "$OUTPUT_DIR" ]]; then
-						WORKING_DIR="$OUTPUT_DIR";
+						CUSTOM_WORKING_DIR="$OUTPUT_DIR";
 				else
 						echo -e "$RED""[!] Output directory $OUTPUT_DIR does not exist or is not writable. Please check the configuration file.""$NC";
 						exit 1;
@@ -867,7 +860,7 @@ function run_subfinder() {
 		echo -e "$GREEN""[i]$BLUE Scanning $1 with subfinder.""$NC";
 		echo -e "$GREEN""[i]$ORANGE Command: subfinder -d $1 -o $WORKING_DIR/subfinder-domains.txt -t 25 -w $2.""$NC";
 		START=$(date +%s);
-		"$SUBFINDER" -d "$1" -o "$WORKING_DIR"/subfinder-domains.txt;
+		"$SUBFINDER" -d "$1" -o "$WORKING_DIR"/subfinder-domains.txt -t 25 -w "$2";
 		END=$(date +%s);
 		DIFF=$(( END - START ));
 		
@@ -888,8 +881,7 @@ function run_sublist3r() {
 		echo -e "$GREEN""[i]$BLUE Scanning $1 with sublist3r.""$NC";
 		echo -e "$GREEN""[i]$ORANGE Command: $SUBLIST3R -d $1 -v -b -t 50 -o $WORKING_DIR/sublist3r-output.txt.""$NC";
 		START=$(date +%s);
-		"$SUBLIST3R" -d "$1" -v -o "$WORKING_DIR"/sublist3r-output.txt
-		# "$SUBLIST3R" -d "$1" -v -b -t 50 -o "$WORKING_DIR"/sublist3r-output.txt
+		"$SUBLIST3R" -d "$1" -v -b -t 50 -o "$WORKING_DIR"/sublist3r-output.txt
 		END=$(date +%s);
 		DIFF=$(( END - START ));
 
@@ -936,10 +928,9 @@ function run_amass() {
 		# Call with domain as $1 and wordlist as $2
 
 		echo -e "$GREEN""[i]$BLUE Scanning $1 with amass.""$NC";
-		echo -e "$GREEN""[i]$ORANGE Command: amass -d $1 -ip -rf resolvers.txt -active -o $WORKING_DIR/amass-output.txt -min-for-recursive 3""$NC";
+		echo -e "$GREEN""[i]$ORANGE Command: amass -d $1 -w $2 -ip -rf resolvers.txt -active -o $WORKING_DIR/amass-output.txt -min-for-recursive 3 -bl $BLACKLIST""$NC";
 		START=$(date +%s);
-		"$AMASS" -d "$1" -ip -rf resolvers.txt -active -o "$WORKING_DIR"/amass-output.txt -min-for-recursive 3;
-		# "$AMASS" -d "$1" -w "$2" -ip -rf resolvers.txt -active -o "$WORKING_DIR"/amass-output.txt -min-for-recursive 3 -bl "$BLACKLIST";
+		"$AMASS" -d "$1" -brute -w "$2" -ip -rf resolvers.txt -active -o "$WORKING_DIR"/amass-output.txt -min-for-recursive 3 -bl "$BLACKLIST";
 		END=$(date +%s);
 		DIFF=$(( END - START ));
 
@@ -1424,7 +1415,7 @@ function run_ffuf() {
 				COUNT=$(wc -l "$3" | awk '{print $1}')
 				START=$(date +%s);
 				while read -r ADOMAIN; do
-						"$FFUF" -u "$HTTP"://"$ADOMAIN"/FUZZ -w "$2" -sf -se -fc 301,302,404 -k -mc all | tee "$WORKING_DIR"/ffuf/"$ADOMAIN";
+						"$FFUF" -u "$HTTP"://"$ADOMAIN"/FUZZ -w "$2" -timeout 3 -sf -se -fc 301,302,404 -k -mc all | tee "$WORKING_DIR"/ffuf/"$ADOMAIN";
 						COUNT=$((COUNT - 1));
 						if [[ "$COUNT" != 0 ]]; then
 								echo -e "$GREEN""[i]$BLUE $COUNT domain(s) remaining.""$NC";
@@ -1441,7 +1432,7 @@ function run_ffuf() {
 				COUNT=$(wc -l "$3" | awk '{print $1}')
 				START=$(date +%s);
 				while read -r ADOMAIN; do
-						"$FFUF" -u "$HTTP"://"$ADOMAIN"/FUZZ -w "$2" -sf -se -fc 301,302,404 -k -mc all | tee "$WORKING_DIR"/ffuf/"$ADOMAIN";
+						"$FFUF" -u "$HTTP"://"$ADOMAIN"/FUZZ -w "$2" -timeout 3 -sf -se -fc 301,302,404 -k -mc all | tee "$WORKING_DIR"/ffuf/"$ADOMAIN";
 						COUNT=$((COUNT - 1));
 						if [[ "$COUNT" != 0 ]]; then
 								echo -e "$GREEN""[i]$BLUE $COUNT domain(s) remaining.""$NC";
@@ -1462,15 +1453,6 @@ function run_ffuf() {
 		done
 }
 
-function run_del_overlap() {
-		echo -e "$GREEN""[i]$ORANGE Command: meg start.""$NC";
-		cat "$WORKING_DIR"/$ALL_RESOLVED | httprobe -c 30 > "$WORKING_DIR"/tmp3;
-		meg -c 30 -s 200 / "$WORKING_DIR"/tmp3 "$WORKING_DIR"/out;
-		awk '{print $2}' "$WORKING_DIR"/out/index > "$WORKING_DIR"/tmp3;
-		sed -e 's/https://g' -e 's/http://g' -e 's/\///g' "$WORKING_DIR"/tmp3 | sort | uniq > "$WORKING_DIR"/$ALL_OVERLAP;
-		rm -rf "$WORKING_DIR"/tmp3;
-}
-
 function run_dirsearch() {
 		# Trap SIGINT so broken dirsearch runs can be cancelled
 		trap cancel SIGINT;
@@ -1484,7 +1466,7 @@ function run_dirsearch() {
 				COUNT=$(wc -l "$3" | awk '{print $1}')
 				START=$(date +%s);
 				while read -r ADOMAIN; do
-						"$DIRSEARCH" -u "$HTTP"://"$ADOMAIN" -e php,aspx,asp,html,jsp -t 20 -x 301,302,404 -F --plain-text-report="$WORKING_DIR"/dirsearch/"$ADOMAIN".txt -w "$2";
+						"$DIRSEARCH" -u "$HTTP"://"$ADOMAIN" -e php,aspx,asp -t 20 -x 301,302,404 -F --plain-text-report="$WORKING_DIR"/dirsearch/"$ADOMAIN".txt -w "$2";
 						COUNT=$((COUNT - 1));
 						if [[ "$COUNT" != 0 ]]; then
 								echo -e "$GREEN""[i]$BLUE $COUNT domain(s) remaining.""$NC";
@@ -1501,7 +1483,7 @@ function run_dirsearch() {
 				COUNT=$(wc -l "$3" | awk '{print $1}')
 				START=$(date +%s);
 				while read -r ADOMAIN; do
-						"$DIRSEARCH" -u "$HTTP"://"$ADOMAIN" -e php,aspx,asp,html,jsp -t 20 -x 301,302,404 -F --plain-text-report="$WORKING_DIR"/dirsearch/"$ADOMAIN".txt -w "$2";
+						"$DIRSEARCH" -u "$HTTP"://"$ADOMAIN" -e php,aspx,asp -t 20 -x 301,302,404 -F --plain-text-report="$WORKING_DIR"/dirsearch/"$ADOMAIN".txt -w "$2";
 						COUNT=$((COUNT - 1));
 						if [[ "$COUNT" != 0 ]]; then
 								echo -e "$GREEN""[i]$BLUE $COUNT domain(s) remaining.""$NC";
@@ -1898,9 +1880,8 @@ function run_subjack() {
 				echo -e "$GREEN""[i]$ORANGE It will run twice, once against HTTPS and once against HTTP.""$NC";
 				echo -e "$GREEN""[i]$ORANGE Command: subjack -d $1 -w $2 -v -t 20 -ssl -m -o $WORKING_DIR/subjack-output.txt""$NC";
 				START=$(date +%s);
-				"$SUBJACK" -d "$1" -w "$2" -t 20 -ssl -m -o "$WORKING_DIR"/subjack-https-output.txt -c "$HOME"/go/src/github.com/gy741/subjack/fingerprints.json;
-				"$SUBJACK" -d "$1" -w "$2" -t 20 -m -o "$WORKING_DIR"/subjack-http-output.txt -c "$HOME"/go/src/github.com/gy741/subjack/fingerprints.json;
-				cat "$WORKING_DIR"/subjack-https-output.txt "$WORKING_DIR"/subjack-http-output.txt | sort | uniq | grep -v -P "amazonaws.com|trafficmanager.net" >> ~/"$TARGET"-subjack-output.txt;
+				"$SUBJACK" -d "$1" -w "$2" -v -t 20 -ssl -m -o "$WORKING_DIR"/subjack-https-output.txt -c "$HOME"/go/src/github.com/haccer/subjack/fingerprints.json;
+				"$SUBJACK" -d "$1" -w "$2" -v -t 20 -m -o "$WORKING_DIR"/subjack-http-output.txt -c "$HOME"/go/src/github.com/haccer/subjack/fingerprints.json;
 				END=$(date +%s);
 				DIFF=$(( END - START ));
 		else
@@ -1908,9 +1889,8 @@ function run_subjack() {
 				echo -e "$GREEN""[i]$ORANGE It will run twice, once against HTTPS and once against HTTP.""$NC";
 				echo -e "$GREEN""[i]$ORANGE Command: subjack -d $1 -w $2 -v -t 20 -ssl -m -o $WORKING_DIR/subjack-output.txt""$NC";
 				START=$(date +%s);
-				"$SUBJACK" -d "$1" -w "$2" -t 20 -ssl -m -o "$WORKING_DIR"/subjack-https-output.txt -c "$HOME"/go/src/github.com/gy741/subjack/fingerprints.json;
-				"$SUBJACK" -d "$1" -w "$2" -t 20 -m -o "$WORKING_DIR"/subjack-http-output.txt -c "$HOME"/go/src/github.com/gy741/subjack/fingerprints.json;
-				cat "$WORKING_DIR"/subjack-https-output.txt "$WORKING_DIR"/subjack-http-output.txt | sort | uniq | grep -v -P "amazonaws.com|trafficmanager.net" >> ~/"$TARGET"-subjack-output.txt;
+				"$SUBJACK" -d "$1" -w "$2" -v -t 20 -ssl -m -o "$WORKING_DIR"/subjack-https-output.txt -c "$HOME"/go/src/github.com/haccer/subjack/fingerprints.json;
+				"$SUBJACK" -d "$1" -w "$2" -v -t 20 -m -o "$WORKING_DIR"/subjack-http-output.txt -c "$HOME"/go/src/github.com/haccer/subjack/fingerprints.json;
 				END=$(date +%s);
 				DIFF=$(( END - START ));
 		fi
@@ -1986,8 +1966,8 @@ while true; do
 				   read -rp "[i] Enter S/M/L/X/2 " CHOICE;
 				   case $CHOICE in
 						   [sS]* )
-								   run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
-								   run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_OVERLAP";
+								   run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+								   run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 								   run_s3scanner "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 								   run_bfac "$WORKING_DIR"/"$ALL_RESOLVED";
 								   run_whatweb "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
@@ -1996,8 +1976,8 @@ while true; do
 								   break;
 								   ;;
 							[mM]* )
-								   run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
-								   run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_OVERLAP";
+								   run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+								   run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 								   run_s3scanner "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 								   run_bfac "$WORKING_DIR"/"$ALL_RESOLVED";
 								   run_whatweb "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
@@ -2006,7 +1986,7 @@ while true; do
 								   break;
 								   ;;
 							[lL]* )
-								   run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
+								   run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 								   run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 								   run_s3scanner "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 								   run_bfac "$WORKING_DIR"/"$ALL_RESOLVED";
@@ -2016,7 +1996,7 @@ while true; do
 								   break;
 								   ;;
 							[xX]* )
-								   run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
+								   run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 								   run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 								   run_s3scanner "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 								   run_bfac "$WORKING_DIR"/"$ALL_RESOLVED";
@@ -2026,7 +2006,7 @@ while true; do
 								   break;
 								   ;;
 							[2]* )
-								   run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
+								   run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 								   run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 								   run_s3scanner "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 								   run_bfac "$WORKING_DIR"/"$ALL_RESOLVED";
@@ -2129,9 +2109,9 @@ done
 }
 
 function run_notica() {
-		# Call Notica to signal end of script
+		# Call Notica to signal end of script, $1 is for the domain
 		echo -e "$BLUE""Sending Notica notification.""$NC";
-		curl --data "d:Chomp Scan has finished scanning $DOMAIN." "https://notica.us/?$NOTICA";
+		curl --data "d:Chomp Scan has finished scanning $1." "https://notica.us/?$NOTICA";
 }
 
 function run_notica_sudo() {
@@ -2149,21 +2129,619 @@ function run_rescope() {
 		fi
 }
 
-function upload() {
-		echo -e "$ORANGE""  Upload Starting....""$NC";
-		~/rclone/rclone copy "$WORKING_DIR"/"$ALL_DOMAIN" sub:$WORKING_DIR;
-		~/rclone/rclone copy "$WORKING_DIR"/"$ALL_IP" sub:$WORKING_DIR;
-		~/rclone/rclone copy "$WORKING_DIR"/"$ALL_RESOLVED" sub:$WORKING_DIR;
-		~/rclone/rclone copy "$WORKING_DIR"/"$ALL_OVERLAP" sub:$WORKING_DIR;
-		~/rclone/rclone copy "$WORKING_DIR"/subjack-http-output.txt sub:$WORKING_DIR;
-		~/rclone/rclone copy "$WORKING_DIR"/subjack-https-output.txt sub:$WORKING_DIR;
-		# ~/rclone/rclone copy ~/"$TARGET"-subjack-output.txt sub:;
-		sleep 1;
-}
+#### Begin main script functions
 
-#### Error/path/argument checking before beginning script
+# Check tool paths are set
+check_paths;
 
-# Check that -u domain was passed
+# Check for config file and run options if it exists
+if [[ "$CONFIG_FILE" != "" ]]; then
+		echo -e "$GREEN""Beginning scan with config file options.""$NC";
+		sleep 0.5;
+		if [[ "${#DOMAIN_ARRAY[@]}" -gt 1 ]]; then
+				for ARRAY_DOMAIN in "${DOMAIN_ARRAY[@]}"; do
+						# Create output dirs here
+						if [[ "$CUSTOM_WORKING_DIR" == "" ]]; then
+								WORKING_DIR="$ARRAY_DOMAIN"-$(date +%T);
+								mkdir "$WORKING_DIR";
+								touch "$WORKING_DIR"/interesting-domains.txt;
+								INTERESTING_DOMAINS=interesting-domains.txt;
+								touch "$WORKING_DIR"/"$ALL_DOMAIN";
+								touch "$WORKING_DIR"/"$ALL_IP";
+								touch "$WORKING_DIR"/"$ALL_RESOLVED";
+						else
+								WORKING_DIR="$CUSTOM_WORKING_DIR"/"$ARRAY_DOMAIN"-$(date +%T);
+								mkdir -p "$WORKING_DIR";
+								touch "$WORKING_DIR"/interesting-domains.txt;
+								INTERESTING_DOMAINS=interesting-domains.txt;
+								touch "$WORKING_DIR"/"$ALL_DOMAIN";
+								touch "$WORKING_DIR"/"$ALL_IP";
+								touch "$WORKING_DIR"/"$ALL_RESOLVED";
+						fi
+						SCAN_START=$(date +%s);
+						echo "$ARRAY_DOMAIN";
+						## Subdomain enumeration
+						# Run dnscan
+						if [[ "$ENABLE_DNSCAN" -eq 1 ]]; then
+								# Check if $SUBDOMAIN_WORDLIST is set, else use short as default
+								if [[ "$SUBDOMAIN_WORDLIST" != "" ]]; then
+										run_dnscan "$ARRAY_DOMAIN" "$SUBDOMAIN_WORDLIST";
+								else
+										run_dnscan "$ARRAY_DOMAIN" "$SHORT";
+								fi
+						fi
+
+						# Run subfinder
+						if [[ "$ENABLE_SUBFINDER" -eq 1 ]]; then
+								# Check if $SUBDOMAIN_WORDLIST is set, else use short as default
+								if [[ "$SUBDOMAIN_WORDLIST" != "" ]]; then
+										run_subfinder "$ARRAY_DOMAIN" "$SUBDOMAIN_WORDLIST";
+								else
+										run_subfinder "$ARRAY_DOMAIN" "$SHORT";
+								fi
+						fi
+
+						# Run sublist3r
+						if [[ "$ENABLE_SUBLIST3R" -eq 1 ]]; then
+								run_sublist3r "$ARRAY_DOMAIN";
+						fi
+
+						# Run knock
+						if [[ "$ENABLE_KNOCK" -eq 1 ]]; then
+								# Check if $SUBDOMAIN_WORDLIST is set, else use short as default
+								if [[ "$SUBDOMAIN_WORDLIST" != "" ]]; then
+										run_knock "$ARRAY_DOMAIN" "$SUBDOMAIN_WORDLIST";
+								else
+										run_knock "$ARRAY_DOMAIN" "$SHORT";
+								fi
+						fi
+
+						# Run amass
+						if [[ "$ENABLE_AMASS" -eq 1 ]]; then
+								# Check if $SUBDOMAIN_WORDLIST is set, else use short as default
+								if [[ "$SUBDOMAIN_WORDLIST" != "" ]]; then
+										run_amass "$ARRAY_DOMAIN" "$SUBDOMAIN_WORDLIST";
+								else
+										run_amass "$ARRAY_DOMAIN" "$SHORT";
+								fi
+						fi
+
+						# Run masscan and/or goaltdns
+						if [[ "$ENABLE_MASSDNS" -eq 1 ]]; then # Masscan will always run in order to get resolved domains
+								if [[ "$ENABLE_GOALTDNS" -eq 1 ]]; then
+										# Check if $SUBDOMAIN_WORDLIST is set, else use short as default
+										if [[ "$SUBDOMAIN_WORDLIST" != "" ]]; then
+												run_massdns "$ARRAY_DOMAIN" "$SUBDOMAIN_WORDLIST";
+										else
+												run_massdns "$ARRAY_DOMAIN" "$SHORT";
+										fi
+								else
+										# Check if $SUBDOMAIN_WORDLIST is set, else use short as default
+										if [[ "$SUBDOMAIN_WORDLIST" != "" ]]; then
+												run_massdns "$ARRAY_DOMAIN" "$SUBDOMAIN_WORDLIST" "alone";
+										else
+												run_massdns "$ARRAY_DOMAIN" "$SHORT" "alone";
+										fi
+								fi
+						fi
+
+						get_interesting "silent";
+
+						## Screenshots
+						# Run aquatone
+						if [[ "$ENABLE_SCREENSHOTS" -eq 1 ]]; then
+								run_aquatone "default";
+						fi
+
+						## Information gathering
+						# Run subjack
+						if [[ "$ENABLE_SUBJACK" -eq 1 ]]; then
+								if [[ "$USE_ALL" -eq 1 ]]; then
+										run_subjack "$ARRAY_DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+								# Make sure there are interesting domains
+								elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
+										run_subjack "$ARRAY_DOMAIN" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
+								else
+										run_subjack "$ARRAY_DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+								fi
+						fi
+
+						# Run CORStest
+						if [[ "$ENABLE_CORSTEST" -eq 1 ]]; then
+								if [[ "$USE_ALL" -eq 1 ]]; then
+										run_corstest "$ARRAY_DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+								# Make sure there are interesting domains
+								elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
+										run_corstest "$ARRAY_DOMAIN" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
+								else
+										run_corstest "$ARRAY_DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+								fi
+						fi
+
+						# Run S3Scanner
+						if [[ "$ENABLE_S3SCANNER" -eq 1 ]]; then
+								if [[ "$USE_ALL" -eq 1 ]]; then
+										run_s3scanner "$ARRAY_DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+								# Make sure there are interesting domains
+								elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
+										run_s3scanner "$ARRAY_DOMAIN" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
+								else
+										run_s3scanner "$ARRAY_DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+								fi
+						fi
+
+						# Run bfac
+						if [[ "$ENABLE_BFAC" -eq 1 ]]; then
+								if [[ "$USE_ALL" -eq 1 ]]; then
+										run_bfac "$WORKING_DIR"/"$ALL_RESOLVED";
+								# Make sure there are interesting domains
+								elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
+										run_bfac "$WORKING_DIR"/"$INTERESTING_DOMAINS";
+								else
+										run_bfac "$WORKING_DIR"/"$ALL_RESOLVED";
+								fi
+						fi
+
+						# Run whatweb
+						if [[ "$ENABLE_WHATWEB" -eq 1 ]]; then
+								if [[ "$USE_ALL" -eq 1 ]]; then
+										run_whatweb "$ARRAY_DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+								# Make sure there are interesting domains
+								elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
+										run_whatweb "$ARRAY_DOMAIN" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
+								else
+										run_whatweb "$ARRAY_DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+								fi
+						fi
+
+						# Run wafw00f
+						if [[ "$ENABLE_WAFW00F" -eq 1 ]]; then
+								if [[ "$USE_ALL" -eq 1 ]]; then
+										run_wafw00f "$ARRAY_DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+								# Make sure there are interesting domains
+								elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
+										run_wafw00f "$ARRAY_DOMAIN" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
+								else
+										run_wafw00f "$ARRAY_DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+								fi
+						fi
+
+						# Run nikto
+						if [[ "$ENABLE_NIKTO" -eq 1 ]]; then
+								if [[ "$USE_ALL" -eq 1 ]]; then
+										run_nikto "$WORKING_DIR"/"$ALL_RESOLVED";
+								# Make sure there are interesting domains
+								elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
+										run_nikto "$WORKING_DIR"/"$INTERESTING_DOMAINS";
+								else
+										run_nikto "$WORKING_DIR"/"$ALL_RESOLVED";
+								fi
+						fi
+
+						## Content discovery
+						# Run inception
+						if [[ "$ENABLE_INCEPTION" -eq 1 ]]; then
+								# Check if $SUBDOMAIN_WORDLIST is set, else use short as default
+								if [[ "$CONTENT_WORDLIST" != "" ]]; then
+										if [[ "$USE_ALL" -eq 1 ]]; then
+												run_inception "$ARRAY_DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$ALL_RESOLVED";
+										# Make sure there are interesting domains
+										elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
+												run_inception "$ARRAY_DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
+										else
+												run_inception "$ARRAY_DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$ALL_RESOLVED";
+										fi
+								else
+										if [[ "$USE_ALL" -eq 1 ]]; then
+												run_inception "$ARRAY_DOMAIN" "$SHORT" "$WORKING_DIR"/"$ALL_RESOLVED";
+										# Make sure there are interesting domains
+										elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') != 0 ]]; then
+												run_inception "$ARRAY_DOMAIN" "$SHORT" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
+										else
+												run_inception "$ARRAY_DOMAIN" "$SHORT" "$WORKING_DIR"/"$ALL_RESOLVED";
+										fi
+								fi
+						fi
+
+						# Run waybackurls
+						if [[ "$ENABLE_WAYBACKURLS" -eq 1 ]]; then
+								run_waybackurls "$ARRAY_DOMAIN";
+						fi
+
+						# Run ffuf
+						if [[ "$ENABLE_FFUF" -eq 1 ]]; then
+								# Check if $SUBDOMAIN_WORDLIST is set, else use short as default
+								if [[ "$CONTENT_WORDLIST" != "" ]]; then
+										if [[ "$USE_ALL" -eq 1 ]]; then
+												run_ffuf "$ARRAY_DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$ALL_RESOLVED";
+										# Make sure there are interesting domains
+										elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
+												run_ffuf "$ARRAY_DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
+										else
+												run_ffuf "$ARRAY_DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$ALL_RESOLVED";
+										fi
+								else
+										if [[ "$USE_ALL" -eq 1 ]]; then
+												run_ffuf "$ARRAY_DOMAIN" "$SHORT" "$WORKING_DIR"/"$ALL_RESOLVED";
+										# Make sure there are interesting domains
+										elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') != 0 ]]; then
+												run_ffuf "$ARRAY_DOMAIN" "$SHORT" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
+										else
+												run_ffuf "$ARRAY_DOMAIN" "$SHORT" "$WORKING_DIR"/"$ALL_RESOLVED";
+										fi
+								fi
+						fi
+
+						# Run gobuster
+						if [[ "$ENABLE_GOBUSTER" -eq 1 ]]; then
+								# Check if $SUBDOMAIN_WORDLIST is set, else use short as default
+								if [[ "$CONTENT_WORDLIST" != "" ]]; then
+										if [[ "$USE_ALL" -eq 1 ]]; then
+												run_gobuster "$ARRAY_DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$ALL_RESOLVED";
+										# Make sure there are interesting domains
+										elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
+												run_gobuster "$ARRAY_DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
+										else
+												run_gobuster "$ARRAY_DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$ALL_RESOLVED";
+										fi
+								else
+										if [[ "$USE_ALL" -eq 1 ]]; then
+												run_gobuster "$ARRAY_DOMAIN" "$SHORT" "$WORKING_DIR"/"$ALL_RESOLVED";
+										# Make sure there are interesting domains
+										elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') != 0 ]]; then
+												run_gobuster "$ARRAY_DOMAIN" "$SHORT" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
+										else
+												run_gobuster "$ARRAY_DOMAIN" "$SHORT" "$WORKING_DIR"/"$ALL_RESOLVED";
+										fi
+								fi
+						fi
+
+						# Run dirsearch
+						if [[ "$ENABLE_DIRSEARCH" -eq 1 ]]; then
+								# Check if $SUBDOMAIN_WORDLIST is set, else use short as default
+								if [[ "$CONTENT_WORDLIST" != "" ]]; then
+										if [[ "$USE_ALL" -eq 1 ]]; then
+												run_dirsearch "$ARRAY_DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$ALL_RESOLVED";
+										# Make sure there are interesting domains
+										elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
+												run_dirsearch "$ARRAY_DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
+										else
+												run_dirsearch "$ARRAY_DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$ALL_RESOLVED";
+										fi
+								else
+										if [[ "$USE_ALL" -eq 1 ]]; then
+												run_dirsearch "$ARRAY_DOMAIN" "$SHORT" "$WORKING_DIR"/"$ALL_RESOLVED";
+										# Make sure there are interesting domains
+										elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') != 0 ]]; then
+												run_dirsearch "$ARRAY_DOMAIN" "$SHORT" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
+										else
+												run_dirsearch "$ARRAY_DOMAIN" "$SHORT" "$WORKING_DIR"/"$ALL_RESOLVED";
+										fi
+								fi
+						fi
+
+						## Port scanning
+						# Run masscan
+						if [[ "$ENABLE_MASSCAN" -eq 1 ]]; then
+								run_masscan;
+						fi
+
+						# Run nmap
+						if [[ "$ENABLE_NMAP" -eq 1 ]]; then
+								run_nmap;
+						fi
+
+						get_interesting;
+						list_found;
+
+						# Run rescope
+						if [[ "$ENABLE_RESCOPE" -eq 1 ]]; then
+								run_rescope;
+						fi
+
+						# Calculate scan runtime
+						SCAN_END=$(date +%s);
+						SCAN_DIFF=$(( SCAN_END - SCAN_START ));
+						if [[ "$NOTICA" != "" ]]; then
+								run_notica "$ARRAY_DOMAIN";
+						fi
+						echo -e "$BLUE""[i] Total script run time: $SCAN_DIFF seconds.""$NC";
+						WORKING_DIR="";
+				done
+				exit 0;
+		else
+				# Create output dir normally here
+				## Subdomain enumeration
+				# Run dnscan
+				if [[ "$ENABLE_DNSCAN" -eq 1 ]]; then
+						# Check if $SUBDOMAIN_WORDLIST is set, else use short as default
+						if [[ "$SUBDOMAIN_WORDLIST" != "" ]]; then
+								run_dnscan "$DOMAIN" "$SUBDOMAIN_WORDLIST";
+						else
+								run_dnscan "$DOMAIN" "$SHORT";
+						fi
+				fi
+
+				# Run subfinder
+				if [[ "$ENABLE_SUBFINDER" -eq 1 ]]; then
+						# Check if $SUBDOMAIN_WORDLIST is set, else use short as default
+						if [[ "$SUBDOMAIN_WORDLIST" != "" ]]; then
+								run_subfinder "$DOMAIN" "$SUBDOMAIN_WORDLIST";
+						else
+								run_subfinder "$DOMAIN" "$SHORT";
+						fi
+				fi
+
+				# Run sublist3r
+				if [[ "$ENABLE_SUBLIST3R" -eq 1 ]]; then
+						run_sublist3r "$DOMAIN";
+				fi
+
+				# Run knock
+				if [[ "$ENABLE_KNOCK" -eq 1 ]]; then
+						# Check if $SUBDOMAIN_WORDLIST is set, else use short as default
+						if [[ "$SUBDOMAIN_WORDLIST" != "" ]]; then
+								run_knock "$DOMAIN" "$SUBDOMAIN_WORDLIST";
+						else
+								run_knock "$DOMAIN" "$SHORT";
+						fi
+				fi
+
+				# Run amass
+				if [[ "$ENABLE_AMASS" -eq 1 ]]; then
+						# Check if $SUBDOMAIN_WORDLIST is set, else use short as default
+						if [[ "$SUBDOMAIN_WORDLIST" != "" ]]; then
+								run_amass "$DOMAIN" "$SUBDOMAIN_WORDLIST";
+						else
+								run_amass "$DOMAIN" "$SHORT";
+						fi
+				fi
+
+				# Run masscan and/or goaltdns
+				if [[ "$ENABLE_MASSDNS" -eq 1 ]]; then # Masscan will always run in order to get resolved domains
+						if [[ "$ENABLE_GOALTDNS" -eq 1 ]]; then
+								# Check if $SUBDOMAIN_WORDLIST is set, else use short as default
+								if [[ "$SUBDOMAIN_WORDLIST" != "" ]]; then
+										run_massdns "$DOMAIN" "$SUBDOMAIN_WORDLIST";
+								else
+										run_massdns "$DOMAIN" "$SHORT";
+								fi
+						else
+								# Check if $SUBDOMAIN_WORDLIST is set, else use short as default
+								if [[ "$SUBDOMAIN_WORDLIST" != "" ]]; then
+										run_massdns "$DOMAIN" "$SUBDOMAIN_WORDLIST" "alone";
+								else
+										run_massdns "$DOMAIN" "$SHORT" "alone";
+								fi
+						fi
+				fi
+
+				get_interesting "silent";
+
+				## Screenshots
+				# Run aquatone
+				if [[ "$ENABLE_SCREENSHOTS" -eq 1 ]]; then
+						run_aquatone "default";
+				fi
+
+				## Information gathering
+				# Run subjack
+				if [[ "$ENABLE_SUBJACK" -eq 1 ]]; then
+						if [[ "$USE_ALL" -eq 1 ]]; then
+								run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+						# Make sure there are interesting domains
+						elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
+								run_subjack "$DOMAIN" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
+						else
+								run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+						fi
+				fi
+
+				# Run CORStest
+				if [[ "$ENABLE_CORSTEST" -eq 1 ]]; then
+						if [[ "$USE_ALL" -eq 1 ]]; then
+								run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+						# Make sure there are interesting domains
+						elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
+								run_corstest "$DOMAIN" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
+						else
+								run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+						fi
+				fi
+
+				# Run S3Scanner
+				if [[ "$ENABLE_S3SCANNER" -eq 1 ]]; then
+						if [[ "$USE_ALL" -eq 1 ]]; then
+								run_s3scanner "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+						# Make sure there are interesting domains
+						elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
+								run_s3scanner "$DOMAIN" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
+						else
+								run_s3scanner "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+						fi
+				fi
+
+				# Run bfac
+				if [[ "$ENABLE_BFAC" -eq 1 ]]; then
+						if [[ "$USE_ALL" -eq 1 ]]; then
+								run_bfac "$WORKING_DIR"/"$ALL_RESOLVED";
+						# Make sure there are interesting domains
+						elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
+								run_bfac "$WORKING_DIR"/"$INTERESTING_DOMAINS";
+						else
+								run_bfac "$WORKING_DIR"/"$ALL_RESOLVED";
+						fi
+				fi
+
+				# Run whatweb
+				if [[ "$ENABLE_WHATWEB" -eq 1 ]]; then
+						if [[ "$USE_ALL" -eq 1 ]]; then
+								run_whatweb "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+						# Make sure there are interesting domains
+						elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
+								run_whatweb "$DOMAIN" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
+						else
+								run_whatweb "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+						fi
+				fi
+
+				# Run wafw00f
+				if [[ "$ENABLE_WAFW00F" -eq 1 ]]; then
+						if [[ "$USE_ALL" -eq 1 ]]; then
+								run_wafw00f "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+						# Make sure there are interesting domains
+						elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
+								run_wafw00f "$DOMAIN" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
+						else
+								run_wafw00f "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+						fi
+				fi
+
+				# Run nikto
+				if [[ "$ENABLE_NIKTO" -eq 1 ]]; then
+						if [[ "$USE_ALL" -eq 1 ]]; then
+								run_nikto "$WORKING_DIR"/"$ALL_RESOLVED";
+						# Make sure there are interesting domains
+						elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
+								run_nikto "$WORKING_DIR"/"$INTERESTING_DOMAINS";
+						else
+								run_nikto "$WORKING_DIR"/"$ALL_RESOLVED";
+						fi
+				fi
+
+				## Content discovery
+				# Run inception
+				if [[ "$ENABLE_INCEPTION" -eq 1 ]]; then
+						# Check if $SUBDOMAIN_WORDLIST is set, else use short as default
+						if [[ "$CONTENT_WORDLIST" != "" ]]; then
+								if [[ "$USE_ALL" -eq 1 ]]; then
+										run_inception "$DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$ALL_RESOLVED";
+								# Make sure there are interesting domains
+								elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
+										run_inception "$DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
+								else
+										run_inception "$DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$ALL_RESOLVED";
+								fi
+						else
+								if [[ "$USE_ALL" -eq 1 ]]; then
+										run_inception "$DOMAIN" "$SHORT" "$WORKING_DIR"/"$ALL_RESOLVED";
+								# Make sure there are interesting domains
+								elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') != 0 ]]; then
+										run_inception "$DOMAIN" "$SHORT" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
+								else
+										run_inception "$DOMAIN" "$SHORT" "$WORKING_DIR"/"$ALL_RESOLVED";
+								fi
+						fi
+				fi
+
+				# Run waybackurls
+				if [[ "$ENABLE_WAYBACKURLS" -eq 1 ]]; then
+						run_waybackurls "$DOMAIN";
+				fi
+
+				# Run ffuf
+				if [[ "$ENABLE_FFUF" -eq 1 ]]; then
+						# Check if $SUBDOMAIN_WORDLIST is set, else use short as default
+						if [[ "$CONTENT_WORDLIST" != "" ]]; then
+								if [[ "$USE_ALL" -eq 1 ]]; then
+										run_ffuf "$DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$ALL_RESOLVED";
+								# Make sure there are interesting domains
+								elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
+										run_ffuf "$DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
+								else
+										run_ffuf "$DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$ALL_RESOLVED";
+								fi
+						else
+								if [[ "$USE_ALL" -eq 1 ]]; then
+										run_ffuf "$DOMAIN" "$SHORT" "$WORKING_DIR"/"$ALL_RESOLVED";
+								# Make sure there are interesting domains
+								elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') != 0 ]]; then
+										run_ffuf "$DOMAIN" "$SHORT" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
+								else
+										run_ffuf "$DOMAIN" "$SHORT" "$WORKING_DIR"/"$ALL_RESOLVED";
+								fi
+						fi
+				fi
+
+				# Run gobuster
+				if [[ "$ENABLE_GOBUSTER" -eq 1 ]]; then
+						# Check if $SUBDOMAIN_WORDLIST is set, else use short as default
+						if [[ "$CONTENT_WORDLIST" != "" ]]; then
+								if [[ "$USE_ALL" -eq 1 ]]; then
+										run_gobuster "$DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$ALL_RESOLVED";
+								# Make sure there are interesting domains
+								elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
+										run_gobuster "$DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
+								else
+										run_gobuster "$DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$ALL_RESOLVED";
+								fi
+						else
+								if [[ "$USE_ALL" -eq 1 ]]; then
+										run_gobuster "$DOMAIN" "$SHORT" "$WORKING_DIR"/"$ALL_RESOLVED";
+								# Make sure there are interesting domains
+								elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') != 0 ]]; then
+										run_gobuster "$DOMAIN" "$SHORT" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
+								else
+										run_gobuster "$DOMAIN" "$SHORT" "$WORKING_DIR"/"$ALL_RESOLVED";
+								fi
+						fi
+				fi
+
+				# Run dirsearch
+				if [[ "$ENABLE_DIRSEARCH" -eq 1 ]]; then
+						# Check if $SUBDOMAIN_WORDLIST is set, else use short as default
+						if [[ "$CONTENT_WORDLIST" != "" ]]; then
+								if [[ "$USE_ALL" -eq 1 ]]; then
+										run_dirsearch "$DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$ALL_RESOLVED";
+								# Make sure there are interesting domains
+								elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
+										run_dirsearch "$DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
+								else
+										run_dirsearch "$DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$ALL_RESOLVED";
+								fi
+						else
+								if [[ "$USE_ALL" -eq 1 ]]; then
+										run_dirsearch "$DOMAIN" "$SHORT" "$WORKING_DIR"/"$ALL_RESOLVED";
+								# Make sure there are interesting domains
+								elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') != 0 ]]; then
+										run_dirsearch "$DOMAIN" "$SHORT" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
+								else
+										run_dirsearch "$DOMAIN" "$SHORT" "$WORKING_DIR"/"$ALL_RESOLVED";
+								fi
+						fi
+				fi
+
+				## Port scanning
+				# Run masscan
+				if [[ "$ENABLE_MASSCAN" -eq 1 ]]; then
+						run_masscan;
+				fi
+
+				# Run nmap
+				if [[ "$ENABLE_NMAP" -eq 1 ]]; then
+						run_nmap;
+				fi
+
+				get_interesting;
+				list_found;
+
+				# Run rescope
+				if [[ "$ENABLE_RESCOPE" -eq 1 ]]; then
+						run_rescope;
+				fi
+
+				# Calculate scan runtime
+				SCAN_END=$(date +%s);
+				SCAN_DIFF=$(( SCAN_END - SCAN_START ));
+				if [[ "$NOTICA" != "" ]]; then
+						run_notica "$DOMAIN";
+				fi
+				echo -e "$BLUE""[i] Total script run time: $SCAN_DIFF seconds.""$NC";
+				exit 0;
+		fi
+fi
+
+# Check if -u domain was passed
 if [[ "$DOMAIN" == "" ]]; then
 		echo -e "$RED""[!] A domain is required: -u example.com""$NC";
 		usage;
@@ -2177,16 +2755,13 @@ if [[ "$INTERACTIVE" -eq 1 ]] && [[ "$DEFAULT_MODE" -eq 1 ]]; then
 		exit 1;
 fi
 
-# Check tool paths are set
-check_paths;
-
-#### Begin main script functions
-
-# Create working dir, start script timer, and create interesting domains text file
+# Create working directory, start script timer, and create interesting domains text file
 # Check if -o output directory is already set
-if [[ "$WORKING_DIR" == "" ]]; then
+if [[ "$CUSTOM_WORKING_DIR" == "" ]]; then
 		WORKING_DIR="$DOMAIN"-$(date +%T);
 		mkdir "$WORKING_DIR";
+else
+		WORKING_DIR=$CUSTOM_WORKING_DIR;
 fi
 
 SCAN_START=$(date +%s);
@@ -2195,307 +2770,6 @@ INTERESTING_DOMAINS=interesting-domains.txt;
 touch "$WORKING_DIR"/"$ALL_DOMAIN";
 touch "$WORKING_DIR"/"$ALL_IP";
 touch "$WORKING_DIR"/"$ALL_RESOLVED";
-touch "$WORKING_DIR"/"$ALL_RESOLVED";
-
-# Check for config file and run options if it exists
-if [[ "$CONFIG_FILE" != "" ]]; then
-		echo -e "$GREEN""Beginning scan with config file options.""$NC";
-		sleep 0.5;
-
-		## Subdomain enumeration
-		# Run dnscan
-		if [[ "$ENABLE_DNSCAN" -eq 1 ]]; then
-				# Check if $SUBDOMAIN_WORDLIST is set, else use short as default
-				if [[ "$SUBDOMAIN_WORDLIST" != "" ]]; then
-						run_dnscan "$DOMAIN" "$SUBDOMAIN_WORDLIST";
-				else
-						run_dnscan "$DOMAIN" "$SHORT";
-				fi
-		fi
-
-		# Run subfinder
-		if [[ "$ENABLE_SUBFINDER" -eq 1 ]]; then
-				# Check if $SUBDOMAIN_WORDLIST is set, else use short as default
-				if [[ "$SUBDOMAIN_WORDLIST" != "" ]]; then
-						run_subfinder "$DOMAIN" "$SUBDOMAIN_WORDLIST";
-				else
-						run_subfinder "$DOMAIN" "$SHORT";
-				fi
-		fi
-
-		# Run sublist3r
-		if [[ "$ENABLE_SUBLIST3R" -eq 1 ]]; then
-				run_sublist3r "$DOMAIN";
-		fi
-
-		# Run knock
-		if [[ "$ENABLE_KNOCK" -eq 1 ]]; then
-				# Check if $SUBDOMAIN_WORDLIST is set, else use short as default
-				if [[ "$SUBDOMAIN_WORDLIST" != "" ]]; then
-						run_knock "$DOMAIN" "$SUBDOMAIN_WORDLIST";
-				else
-						run_knock "$DOMAIN" "$SHORT";
-				fi
-		fi
-
-		# Run amass
-		if [[ "$ENABLE_AMASS" -eq 1 ]]; then
-				# Check if $SUBDOMAIN_WORDLIST is set, else use short as default
-				if [[ "$SUBDOMAIN_WORDLIST" != "" ]]; then
-						run_amass "$DOMAIN" "$SUBDOMAIN_WORDLIST";
-				else
-						run_amass "$DOMAIN" "$SHORT";
-				fi
-		fi
-
-
-		# Run masscan and/or goaltdns
-		if [[ "$ENABLE_MASSDNS" -eq 1 ]]; then # Masscan will always run in order to get resolved domains
-				if [[ "$ENABLE_GOALTDNS" -eq 1 ]]; then
-						# Check if $SUBDOMAIN_WORDLIST is set, else use short as default
-						if [[ "$SUBDOMAIN_WORDLIST" != "" ]]; then
-								run_massdns "$DOMAIN" "$SUBDOMAIN_WORDLIST";
-						else
-								run_massdns "$DOMAIN" "$SHORT";
-						fi
-				else
-						# Check if $SUBDOMAIN_WORDLIST is set, else use short as default
-						if [[ "$SUBDOMAIN_WORDLIST" != "" ]]; then
-								run_massdns "$DOMAIN" "$SUBDOMAIN_WORDLIST" "alone";
-						else
-								run_massdns "$DOMAIN" "$SHORT" "alone";
-						fi
-				fi
-		fi
-
-		get_interesting "silent";
-		
-		run_del_overlap;
-
-		## Information gathering
-		# Run subjack
-		if [[ "$ENABLE_SUBJACK" -eq 1 ]]; then
-				if [[ "$USE_ALL" -eq 1 ]]; then
-						run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
-				# Make sure there are interesting domains
-				elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
-						run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
-				else
-						run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
-				fi
-		fi
-
-		# Run CORStest
-		if [[ "$ENABLE_CORSTEST" -eq 1 ]]; then
-				if [[ "$USE_ALL" -eq 1 ]]; then
-						run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_OVERLAP";
-				# Make sure there are interesting domains
-				elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
-						run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_OVERLAP";
-				else
-						run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_OVERLAP";
-				fi
-		fi
-
-		# Run S3Scanner
-		if [[ "$ENABLE_S3SCANNER" -eq 1 ]]; then
-				if [[ "$USE_ALL" -eq 1 ]]; then
-						run_s3scanner "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
-				# Make sure there are interesting domains
-				elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
-						run_s3scanner "$DOMAIN" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
-				else
-						run_s3scanner "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
-				fi
-		fi
-		
-		## Screenshots
-		# Run aquatone
-		if [[ "$ENABLE_SCREENSHOTS" -eq 1 ]]; then
-				run_aquatone "default";
-		fi
-
-		# Run bfac
-		if [[ "$ENABLE_BFAC" -eq 1 ]]; then
-				if [[ "$USE_ALL" -eq 1 ]]; then
-						run_bfac "$WORKING_DIR"/"$ALL_RESOLVED";
-				# Make sure there are interesting domains
-				elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
-						run_bfac "$WORKING_DIR"/"$INTERESTING_DOMAINS";
-				else
-						run_bfac "$WORKING_DIR"/"$ALL_RESOLVED";
-				fi
-		fi
-
-		# Run whatweb
-		if [[ "$ENABLE_WHATWEB" -eq 1 ]]; then
-				if [[ "$USE_ALL" -eq 1 ]]; then
-						run_whatweb "$DOMAIN" "$WORKING_DIR"/"$ALL_OVERLAP";
-				# Make sure there are interesting domains
-				elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
-						run_whatweb "$DOMAIN" "$WORKING_DIR"/"$ALL_OVERLAP";
-				else
-						run_whatweb "$DOMAIN" "$WORKING_DIR"/"$ALL_OVERLAP";
-				fi
-		fi
-
-		# Run wafw00f
-		if [[ "$ENABLE_WAFW00F" -eq 1 ]]; then
-				if [[ "$USE_ALL" -eq 1 ]]; then
-						run_wafw00f "$DOMAIN" "$WORKING_DIR"/"$ALL_OVERLAP";
-				# Make sure there are interesting domains
-				elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
-						run_wafw00f "$DOMAIN" "$WORKING_DIR"/"$ALL_OVERLAP";
-				else
-						run_wafw00f "$DOMAIN" "$WORKING_DIR"/"$ALL_OVERLAP";
-				fi
-		fi
-
-		# Run nikto
-		if [[ "$ENABLE_NIKTO" -eq 1 ]]; then
-				if [[ "$USE_ALL" -eq 1 ]]; then
-						run_nikto "$WORKING_DIR"/"$ALL_OVERLAP";
-				# Make sure there are interesting domains
-				elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
-						run_nikto "$WORKING_DIR"/"$ALL_OVERLAP";
-				else
-						run_nikto "$WORKING_DIR"/"$ALL_OVERLAP";
-				fi
-		fi
-
-		## Content discovery
-		# Run inception
-		if [[ "$ENABLE_INCEPTION" -eq 1 ]]; then
-				# Check if $SUBDOMAIN_WORDLIST is set, else use short as default
-				if [[ "$CONTENT_WORDLIST" != "" ]]; then
-						if [[ "$USE_ALL" -eq 1 ]]; then
-								run_inception "$DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$ALL_OVERLAP";
-						# Make sure there are interesting domains
-						elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
-								run_inception "$DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$ALL_OVERLAP";
-						else
-								run_inception "$DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$ALL_OVERLAP";
-						fi
-				else
-						if [[ "$USE_ALL" -eq 1 ]]; then
-								run_inception "$DOMAIN" "$SHORT" "$WORKING_DIR"/"$ALL_OVERLAP";
-						# Make sure there are interesting domains
-						elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') != 0 ]]; then
-								run_inception "$DOMAIN" "$SHORT" "$WORKING_DIR"/"$ALL_OVERLAP";
-						else
-								run_inception "$DOMAIN" "$SHORT" "$WORKING_DIR"/"$ALL_OVERLAP";
-						fi
-				fi
-		fi
-
-		# Run waybackurls
-		if [[ "$ENABLE_WAYBACKURLS" -eq 1 ]]; then
-				run_waybackurls "$DOMAIN";
-		fi
-
-		# Run ffuf
-		if [[ "$ENABLE_FFUF" -eq 1 ]]; then
-				# Check if $SUBDOMAIN_WORDLIST is set, else use short as default
-				if [[ "$CONTENT_WORDLIST" != "" ]]; then
-						if [[ "$USE_ALL" -eq 1 ]]; then
-								run_ffuf "$DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$ALL_OVERLAP";
-						# Make sure there are interesting domains
-						elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
-								run_ffuf "$DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$ALL_OVERLAP";
-						else
-								run_ffuf "$DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$ALL_OVERLAP";
-						fi
-				else
-						if [[ "$USE_ALL" -eq 1 ]]; then
-								run_ffuf "$DOMAIN" "$SHORT" "$WORKING_DIR"/"$ALL_OVERLAP";
-						# Make sure there are interesting domains
-						elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') != 0 ]]; then
-								run_ffuf "$DOMAIN" "$SHORT" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
-						else
-								run_ffuf "$DOMAIN" "$SHORT" "$WORKING_DIR"/"$ALL_OVERLAP";
-						fi
-				fi
-		fi
-
-		# Run gobuster
-		if [[ "$ENABLE_GOBUSTER" -eq 1 ]]; then
-				# Check if $SUBDOMAIN_WORDLIST is set, else use short as default
-				if [[ "$CONTENT_WORDLIST" != "" ]]; then
-						if [[ "$USE_ALL" -eq 1 ]]; then
-								run_gobuster "$DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$ALL_RESOLVED";
-						# Make sure there are interesting domains
-						elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
-								run_gobuster "$DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
-						else
-								run_gobuster "$DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$ALL_RESOLVED";
-						fi
-				else
-						if [[ "$USE_ALL" -eq 1 ]]; then
-								run_gobuster "$DOMAIN" "$SHORT" "$WORKING_DIR"/"$ALL_RESOLVED";
-						# Make sure there are interesting domains
-						elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') != 0 ]]; then
-								run_gobuster "$DOMAIN" "$SHORT" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
-						else
-								run_gobuster "$DOMAIN" "$SHORT" "$WORKING_DIR"/"$ALL_RESOLVED";
-						fi
-				fi
-		fi
-
-		# Run dirsearch
-		if [[ "$ENABLE_DIRSEARCH" -eq 1 ]]; then
-				# Check if $SUBDOMAIN_WORDLIST is set, else use short as default
-				if [[ "$CONTENT_WORDLIST" != "" ]]; then
-						if [[ "$USE_ALL" -eq 1 ]]; then
-								run_dirsearch "$DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$ALL_OVERLAP";
-						# Make sure there are interesting domains
-						elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
-								run_dirsearch "$DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
-						else
-								run_dirsearch "$DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$ALL_OVERLAP";
-						fi
-				else
-						if [[ "$USE_ALL" -eq 1 ]]; then
-								run_dirsearch "$DOMAIN" "$SHORT" "$WORKING_DIR"/"$ALL_OVERLAP";
-						# Make sure there are interesting domains
-						elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') != 0 ]]; then
-								run_dirsearch "$DOMAIN" "$SHORT" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
-						else
-								run_dirsearch "$DOMAIN" "$SHORT" "$WORKING_DIR"/"$ALL_OVERLAP";
-						fi
-				fi
-		fi
-
-		## Port scanning
-		# Run masscan
-		if [[ "$ENABLE_MASSCAN" -eq 1 ]]; then
-				run_masscan;
-		fi
-
-		# Run nmap
-		if [[ "$ENABLE_NMAP" -eq 1 ]]; then
-				run_nmap;
-		fi
-
-		get_interesting;
-		list_found;
-
-		# Run rescope
-		if [[ "$ENABLE_RESCOPE" -eq 1 ]]; then
-				run_rescope;
-		fi
-
-		# Calculate scan runtime
-		SCAN_END=$(date +%s);
-		SCAN_DIFF=$(( SCAN_END - SCAN_START ));
-		
-		upload;
-		
-		if [[ "$NOTICA" != "" ]]; then
-				run_notica;
-		fi
-		echo -e "$BLUE""[i] Total script run time: $SCAN_DIFF seconds.""$NC";
-		exit 0;
-fi
 
 # Check for -D non-interactive default flag
 # Defaults for non-interactive:
@@ -2527,7 +2801,7 @@ if [[ "$DEFAULT_MODE" -eq 1 ]]; then
 		run_aquatone "default";
 		run_masscan;
 		run_nmap;
-		run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
+		run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 		run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 		run_s3scanner "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 		run_bfac "$WORKING_DIR"/"$ALL_RESOLVED";
@@ -2547,7 +2821,7 @@ if [[ "$DEFAULT_MODE" -eq 1 ]]; then
 		SCAN_END=$(date +%s);
 		SCAN_DIFF=$(( SCAN_END - SCAN_START ));
 		if [[ "$NOTICA" != "" ]]; then
-				run_notica;
+				run_notica "$DOMAIN";
 		fi
 		echo -e "$BLUE""[i] Total script run time: $SCAN_DIFF seconds.""$NC";
 		
@@ -2581,7 +2855,7 @@ if [[ "$INTERACTIVE" -eq 1 ]]; then
 		SCAN_END=$(date +%s);
 		SCAN_DIFF=$(( SCAN_END - SCAN_START ));
 		if [[ "$NOTICA" != "" ]]; then
-				run_notica;
+				run_notica "$DOMAIN";
 		fi
 		echo -e "$BLUE""[i] Total script run time: $SCAN_DIFF seconds.""$NC";
 		
@@ -2639,7 +2913,7 @@ if [[ "$INFO_GATHERING" -eq 1 ]]; then
 		unique;
 
 		if [[ "$USE_ALL" -eq 1 ]]; then
-				run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
+				run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 				run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 				run_s3scanner "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 				run_bfac "$WORKING_DIR"/"$ALL_RESOLVED";
@@ -2648,7 +2922,7 @@ if [[ "$INFO_GATHERING" -eq 1 ]]; then
 				run_nikto "$WORKING_DIR"/"$ALL_RESOLVED";
 		# Make sure there are interesting domains
 		elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
-				run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
+				run_subjack "$DOMAIN" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
 				run_corstest "$DOMAIN" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
 				run_s3scanner "$DOMAIN" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
 				run_bfac "$WORKING_DIR"/"$INTERESTING_DOMAINS";
@@ -2656,7 +2930,7 @@ if [[ "$INFO_GATHERING" -eq 1 ]]; then
 				run_wafw00f "$DOMAIN" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
 				run_nikto "$WORKING_DIR"/"$INTERESTING_DOMAINS";
 		else
-				run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
+				run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 				run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 				run_s3scanner "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 				run_bfac "$WORKING_DIR"/"$ALL_RESOLVED";
@@ -2747,9 +3021,7 @@ fi
 SCAN_END=$(date +%s);
 SCAN_DIFF=$(( SCAN_END - SCAN_START ));
 
-upload;
-
 if [[ "$NOTICA" != "" ]]; then
-		run_notica;
+		run_notica "$DOMAIN";
 fi
 echo -e "$BLUE""[i] Total script run time: $SCAN_DIFF seconds.""$NC";
