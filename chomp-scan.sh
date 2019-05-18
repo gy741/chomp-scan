@@ -2266,12 +2266,6 @@ if [[ "$CONFIG_FILE" != "" ]]; then
 
 						run_del_overlap;
 
-						## Screenshots
-						# Run aquatone
-						if [[ "$ENABLE_SCREENSHOTS" -eq 1 ]]; then
-								run_aquatone "default";
-						fi
-
 						## Information gathering
 						# Run subjack
 						if [[ "$ENABLE_SUBJACK" -eq 1 ]]; then
@@ -2295,6 +2289,12 @@ if [[ "$CONFIG_FILE" != "" ]]; then
 								else
 										run_corstest "$ARRAY_DOMAIN" "$WORKING_DIR"/"$ALL_OVERLAP";
 								fi
+						fi
+
+						## Screenshots
+						# Run aquatone
+						if [[ "$ENABLE_SCREENSHOTS" -eq 1 ]]; then
+								run_aquatone "default";
 						fi
 
 						# Run S3Scanner
