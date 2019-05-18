@@ -70,6 +70,12 @@ ENABLE_KNOCK=0;
 ALL_IP=all_discovered_ips.txt;
 ALL_DOMAIN=all_discovered_domains.txt;
 ALL_RESOLVED=all_resolved_domains.txt;
+ALL_OVERLAP=all_del_overlap_domains.txt;
+
+# upload setting
+TARGET=$(cat /etc/hostname);
+
+
 
 function set_tool_paths() {
 		# If tool paths have not been set, set them
@@ -1453,6 +1459,15 @@ function run_ffuf() {
 		done
 }
 
+function run_del_overlap() {
+		echo -e "$GREEN""[i]$ORANGE Command: meg start.""$NC";
+		cat "$WORKING_DIR"/$ALL_RESOLVED | httprobe -c 30 > "$WORKING_DIR"/tmp3;
+		meg -c 30 -s 200 / "$WORKING_DIR"/tmp3 "$WORKING_DIR"/out;
+		awk '{print $2}' "$WORKING_DIR"/out/index > "$WORKING_DIR"/tmp3;
+		sed -e 's/https://g' -e 's/http://g' -e 's/\///g' "$WORKING_DIR"/tmp3 | sort | uniq > "$WORKING_DIR"/$ALL_OVERLAP;
+		rm -rf "$WORKING_DIR"/tmp3;
+}
+
 function run_dirsearch() {
 		# Trap SIGINT so broken dirsearch runs can be cancelled
 		trap cancel SIGINT;
@@ -1460,13 +1475,13 @@ function run_dirsearch() {
 		# Call with domain as $1, wordlist size as $2, and domain list as $3
 		if [[ $3 == $WORKING_DIR/$ALL_RESOLVED ]]; then
 				echo -e "$GREEN""[i]$BLUE Running dirsearch against all $(wc -l "$3" | awk '{print $1}') unique discovered domains.""$NC";
-				echo -e "$GREEN""[i]$BLUE Command: dirsearch -u $DOMAIN -e php,aspx,asp -t 20 -x 310,302,404 -F --plain-text-report=$WORKING_DIR/dirsearch/$DOMAIN.txt -w $2""$NC";
+				echo -e "$GREEN""[i]$BLUE Command: dirsearch -u $DOMAIN -e php,aspx,asp,html,jsp -t 20 -x 310,302,404 -F --plain-text-report=$WORKING_DIR/dirsearch/$DOMAIN.txt -w $2""$NC";
 				# Run dirsearch
 				mkdir "$WORKING_DIR"/dirsearch;
 				COUNT=$(wc -l "$3" | awk '{print $1}')
 				START=$(date +%s);
 				while read -r ADOMAIN; do
-						"$DIRSEARCH" -u "$HTTP"://"$ADOMAIN" -e php,aspx,asp -t 20 -x 301,302,404 -F --plain-text-report="$WORKING_DIR"/dirsearch/"$ADOMAIN".txt -w "$2";
+						"$DIRSEARCH" -u "$HTTP"://"$ADOMAIN" -e php,aspx,asp,html,jsp -t 20 -x 301,302,404 -F --plain-text-report="$WORKING_DIR"/dirsearch/"$ADOMAIN".txt -w "$2";
 						COUNT=$((COUNT - 1));
 						if [[ "$COUNT" != 0 ]]; then
 								echo -e "$GREEN""[i]$BLUE $COUNT domain(s) remaining.""$NC";
@@ -1477,13 +1492,13 @@ function run_dirsearch() {
 				echo -e "$GREEN""[i]$BLUE Dirsearch took $DIFF seconds to run.""$NC";
 		else
 				echo -e "$GREEN""[i]$BLUE Running dirsearch against all $(wc -l "$3" | awk '{print $1}') discovered interesting domains.""$NC";
-				echo -e "$GREEN""[i]$BLUE Command: dirsearch -u $DOMAIN -e php,aspx,asp -t 20 -x 301,302,404 -F --plain-text-report=$WORKING_DIR/dirsearch/$DOMAIN.txt -w $2""$NC";
+				echo -e "$GREEN""[i]$BLUE Command: dirsearch -u $DOMAIN -e php,aspx,asp,html,jsp -t 20 -x 301,302,404 -F --plain-text-report=$WORKING_DIR/dirsearch/$DOMAIN.txt -w $2""$NC";
 				# Run dirsearch
 				mkdir "$WORKING_DIR"/dirsearch;
 				COUNT=$(wc -l "$3" | awk '{print $1}')
 				START=$(date +%s);
 				while read -r ADOMAIN; do
-						"$DIRSEARCH" -u "$HTTP"://"$ADOMAIN" -e php,aspx,asp -t 20 -x 301,302,404 -F --plain-text-report="$WORKING_DIR"/dirsearch/"$ADOMAIN".txt -w "$2";
+						"$DIRSEARCH" -u "$HTTP"://"$ADOMAIN" -e php,aspx,asp,html,jsp -t 20 -x 301,302,404 -F --plain-text-report="$WORKING_DIR"/dirsearch/"$ADOMAIN".txt -w "$2";
 						COUNT=$((COUNT - 1));
 						if [[ "$COUNT" != 0 ]]; then
 								echo -e "$GREEN""[i]$BLUE $COUNT domain(s) remaining.""$NC";
@@ -1880,8 +1895,9 @@ function run_subjack() {
 				echo -e "$GREEN""[i]$ORANGE It will run twice, once against HTTPS and once against HTTP.""$NC";
 				echo -e "$GREEN""[i]$ORANGE Command: subjack -d $1 -w $2 -v -t 20 -ssl -m -o $WORKING_DIR/subjack-output.txt""$NC";
 				START=$(date +%s);
-				"$SUBJACK" -d "$1" -w "$2" -v -t 20 -ssl -m -o "$WORKING_DIR"/subjack-https-output.txt -c "$HOME"/go/src/github.com/haccer/subjack/fingerprints.json;
-				"$SUBJACK" -d "$1" -w "$2" -v -t 20 -m -o "$WORKING_DIR"/subjack-http-output.txt -c "$HOME"/go/src/github.com/haccer/subjack/fingerprints.json;
+				"$SUBJACK" -d "$1" -w "$2" -t 20 -ssl -m -o "$WORKING_DIR"/subjack-https-output.txt -c "$HOME"/go/src/github.com/gy741/subjack/fingerprints.json;
+				"$SUBJACK" -d "$1" -w "$2" -t 20 -m -o "$WORKING_DIR"/subjack-http-output.txt -c "$HOME"/go/src/github.com/gy741/subjack/fingerprints.json;
+				cat "$WORKING_DIR"/subjack-https-output.txt "$WORKING_DIR"/subjack-http-output.txt | sort | uniq | grep -v -P "amazonaws.com|trafficmanager.net" >> ~/"$TARGET"-subjack-output.txt;
 				END=$(date +%s);
 				DIFF=$(( END - START ));
 		else
@@ -1889,8 +1905,9 @@ function run_subjack() {
 				echo -e "$GREEN""[i]$ORANGE It will run twice, once against HTTPS and once against HTTP.""$NC";
 				echo -e "$GREEN""[i]$ORANGE Command: subjack -d $1 -w $2 -v -t 20 -ssl -m -o $WORKING_DIR/subjack-output.txt""$NC";
 				START=$(date +%s);
-				"$SUBJACK" -d "$1" -w "$2" -v -t 20 -ssl -m -o "$WORKING_DIR"/subjack-https-output.txt -c "$HOME"/go/src/github.com/haccer/subjack/fingerprints.json;
-				"$SUBJACK" -d "$1" -w "$2" -v -t 20 -m -o "$WORKING_DIR"/subjack-http-output.txt -c "$HOME"/go/src/github.com/haccer/subjack/fingerprints.json;
+				"$SUBJACK" -d "$1" -w "$2" -t 20 -ssl -m -o "$WORKING_DIR"/subjack-https-output.txt -c "$HOME"/go/src/github.com/gy741/subjack/fingerprints.json;
+				"$SUBJACK" -d "$1" -w "$2" -t 20 -m -o "$WORKING_DIR"/subjack-http-output.txt -c "$HOME"/go/src/github.com/gy741/subjack/fingerprints.json;
+				cat "$WORKING_DIR"/subjack-https-output.txt "$WORKING_DIR"/subjack-http-output.txt | sort | uniq | grep -v -P "amazonaws.com|trafficmanager.net" >> ~/"$TARGET"-subjack-output.txt;
 				END=$(date +%s);
 				DIFF=$(( END - START ));
 		fi
@@ -1967,7 +1984,7 @@ while true; do
 				   case $CHOICE in
 						   [sS]* )
 								   run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
-								   run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+								   run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_OVERLAP";
 								   run_s3scanner "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 								   run_bfac "$WORKING_DIR"/"$ALL_RESOLVED";
 								   run_whatweb "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
@@ -1977,7 +1994,7 @@ while true; do
 								   ;;
 							[mM]* )
 								   run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
-								   run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+								   run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_OVERLAP";
 								   run_s3scanner "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 								   run_bfac "$WORKING_DIR"/"$ALL_RESOLVED";
 								   run_whatweb "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
@@ -1987,7 +2004,7 @@ while true; do
 								   ;;
 							[lL]* )
 								   run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
-								   run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+								   run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_OVERLAP";
 								   run_s3scanner "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 								   run_bfac "$WORKING_DIR"/"$ALL_RESOLVED";
 								   run_whatweb "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
@@ -1997,7 +2014,7 @@ while true; do
 								   ;;
 							[xX]* )
 								   run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
-								   run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+								   run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_OVERLAP";
 								   run_s3scanner "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 								   run_bfac "$WORKING_DIR"/"$ALL_RESOLVED";
 								   run_whatweb "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
@@ -2007,7 +2024,7 @@ while true; do
 								   ;;
 							[2]* )
 								   run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
-								   run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+								   run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_OVERLAP";
 								   run_s3scanner "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 								   run_bfac "$WORKING_DIR"/"$ALL_RESOLVED";
 								   run_whatweb "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
@@ -2227,6 +2244,8 @@ if [[ "$CONFIG_FILE" != "" ]]; then
 
 						get_interesting "silent";
 
+						run_del_overlap;
+
 						## Screenshots
 						# Run aquatone
 						if [[ "$ENABLE_SCREENSHOTS" -eq 1 ]]; then
@@ -2237,24 +2256,24 @@ if [[ "$CONFIG_FILE" != "" ]]; then
 						# Run subjack
 						if [[ "$ENABLE_SUBJACK" -eq 1 ]]; then
 								if [[ "$USE_ALL" -eq 1 ]]; then
-										run_subjack "$ARRAY_DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+										run_subjack "$ARRAY_DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
 								# Make sure there are interesting domains
 								elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
-										run_subjack "$ARRAY_DOMAIN" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
+										run_subjack "$ARRAY_DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
 								else
-										run_subjack "$ARRAY_DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+										run_subjack "$ARRAY_DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
 								fi
 						fi
 
 						# Run CORStest
 						if [[ "$ENABLE_CORSTEST" -eq 1 ]]; then
 								if [[ "$USE_ALL" -eq 1 ]]; then
-										run_corstest "$ARRAY_DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+										run_corstest "$ARRAY_DOMAIN" "$WORKING_DIR"/"$ALL_OVERLAP";
 								# Make sure there are interesting domains
 								elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
-										run_corstest "$ARRAY_DOMAIN" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
+										run_corstest "$ARRAY_DOMAIN" "$WORKING_DIR"/"$ALL_OVERLAP";
 								else
-										run_corstest "$ARRAY_DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
+										run_corstest "$ARRAY_DOMAIN" "$WORKING_DIR"/"$ALL_OVERLAP";
 								fi
 						fi
 
@@ -2309,12 +2328,12 @@ if [[ "$CONFIG_FILE" != "" ]]; then
 						# Run nikto
 						if [[ "$ENABLE_NIKTO" -eq 1 ]]; then
 								if [[ "$USE_ALL" -eq 1 ]]; then
-										run_nikto "$WORKING_DIR"/"$ALL_RESOLVED";
+										run_nikto "$WORKING_DIR"/"$ALL_OVERLAP";
 								# Make sure there are interesting domains
-								elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
-										run_nikto "$WORKING_DIR"/"$INTERESTING_DOMAINS";
+								elif [[ $(wc -l "$WORKING_DIR"/"$ALL_OVERLAP" | awk '{print $1}') -gt 0 ]]; then
+										run_nikto "$WORKING_DIR"/"$ALL_OVERLAP";
 								else
-										run_nikto "$WORKING_DIR"/"$ALL_RESOLVED";
+										run_nikto "$WORKING_DIR"/"$ALL_OVERLAP";
 								fi
 						fi
 
@@ -2401,21 +2420,21 @@ if [[ "$CONFIG_FILE" != "" ]]; then
 								# Check if $SUBDOMAIN_WORDLIST is set, else use short as default
 								if [[ "$CONTENT_WORDLIST" != "" ]]; then
 										if [[ "$USE_ALL" -eq 1 ]]; then
-												run_dirsearch "$ARRAY_DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$ALL_RESOLVED";
+												run_dirsearch "$ARRAY_DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$ALL_OVERLAP";
 										# Make sure there are interesting domains
 										elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
 												run_dirsearch "$ARRAY_DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
 										else
-												run_dirsearch "$ARRAY_DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$ALL_RESOLVED";
+												run_dirsearch "$ARRAY_DOMAIN" "$CONTENT_WORDLIST" "$WORKING_DIR"/"$ALL_OVERLAP";
 										fi
 								else
 										if [[ "$USE_ALL" -eq 1 ]]; then
-												run_dirsearch "$ARRAY_DOMAIN" "$SHORT" "$WORKING_DIR"/"$ALL_RESOLVED";
+												run_dirsearch "$ARRAY_DOMAIN" "$SHORT" "$WORKING_DIR"/"$ALL_OVERLAP";
 										# Make sure there are interesting domains
 										elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') != 0 ]]; then
 												run_dirsearch "$ARRAY_DOMAIN" "$SHORT" "$WORKING_DIR"/"$INTERESTING_DOMAINS";
 										else
-												run_dirsearch "$ARRAY_DOMAIN" "$SHORT" "$WORKING_DIR"/"$ALL_RESOLVED";
+												run_dirsearch "$ARRAY_DOMAIN" "$SHORT" "$WORKING_DIR"/"$ALL_OVERLAP";
 										fi
 								fi
 						fi
@@ -2442,6 +2461,9 @@ if [[ "$CONFIG_FILE" != "" ]]; then
 						# Calculate scan runtime
 						SCAN_END=$(date +%s);
 						SCAN_DIFF=$(( SCAN_END - SCAN_START ));
+						
+						upload;
+						
 						if [[ "$NOTICA" != "" ]]; then
 								run_notica "$ARRAY_DOMAIN";
 						fi
@@ -2733,6 +2755,9 @@ if [[ "$CONFIG_FILE" != "" ]]; then
 				# Calculate scan runtime
 				SCAN_END=$(date +%s);
 				SCAN_DIFF=$(( SCAN_END - SCAN_START ));
+				
+				upload;
+				
 				if [[ "$NOTICA" != "" ]]; then
 						run_notica "$DOMAIN";
 				fi
