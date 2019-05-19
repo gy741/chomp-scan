@@ -101,7 +101,7 @@ function set_tool_paths() {
 				DNSCAN=$TOOL_PATH/dnscan/dnscan.py;
 				MASSDNS_BIN=$TOOL_PATH/massdns/bin/massdns;
 				MASSDNS_BRUTE=$TOOL_PATH/massdns/scripts/subbrute.py;
-				MASSDNS_RESOLVERS=resolvers3.txt;
+				MASSDNS_RESOLVERS=resolvers2.txt;
 				AQUATONE=$TOOL_PATH/aquatone/aquatone;
 				BFAC=$TOOL_PATH/bfac/bfac;
 				DIRSEARCH=$TOOL_PATH/dirsearch/dirsearch.py;
@@ -2270,8 +2270,6 @@ if [[ "$CONFIG_FILE" != "" ]]; then
 
 						get_interesting "silent";
 
-						run_del_overlap;
-
 						## Information gathering
 						# Run subjack
 						if [[ "$ENABLE_SUBJACK" -eq 1 ]]; then
@@ -2296,6 +2294,8 @@ if [[ "$CONFIG_FILE" != "" ]]; then
 										run_corstest "$ARRAY_DOMAIN" "$WORKING_DIR"/"$ALL_OVERLAP";
 								fi
 						fi
+
+						run_del_overlap;
 
 						## Screenshots
 						# Run aquatone
