@@ -2294,8 +2294,8 @@ if [[ "$CONFIG_FILE" != "" ]]; then
 										run_corstest "$ARRAY_DOMAIN" "$WORKING_DIR"/"$ALL_OVERLAP";
 								fi
 						fi
-
-						run_del_overlap;
+						# hmm... speed slow...
+						# run_del_overlap;
 
 						## Screenshots
 						# Run aquatone
