@@ -2296,7 +2296,7 @@ if [[ "$CONFIG_FILE" != "" ]]; then
 								fi
 						fi
 						# hmm... speed slow...
-						# run_del_overlap;
+						run_del_overlap;
 
 						## Screenshots
 						# Run aquatone
