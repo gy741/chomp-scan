@@ -2283,6 +2283,9 @@ if [[ "$CONFIG_FILE" != "" ]]; then
 										run_subjack "$ARRAY_DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
 								fi
 						fi
+						
+						# hmm... speed slow...
+						# run_del_overlap;
 
 						# Run CORStest
 						if [[ "$ENABLE_CORSTEST" -eq 1 ]]; then
@@ -2295,8 +2298,6 @@ if [[ "$CONFIG_FILE" != "" ]]; then
 										run_corstest "$ARRAY_DOMAIN" "$WORKING_DIR"/"$ALL_OVERLAP";
 								fi
 						fi
-						# hmm... speed slow...
-						run_del_overlap;
 
 						## Screenshots
 						# Run aquatone
