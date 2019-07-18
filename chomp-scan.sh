@@ -1908,8 +1908,8 @@ function run_subjack() {
 				echo -e "$GREEN""[i]$ORANGE It will run twice, once against HTTPS and once against HTTP.""$NC";
 				echo -e "$GREEN""[i]$ORANGE Command: subjack -d $1 -w $2 -v -t 20 -ssl -m -o $WORKING_DIR/subjack-output.txt""$NC";
 				START=$(date +%s);
-				"$SUBJACK" -d "$1" -w "$2" -t 20 -ssl -m -o "$WORKING_DIR"/subjack-https-output.txt -c "$HOME"/go/src/github.com/gy741/subjack/fingerprints.json;
-				"$SUBJACK" -d "$1" -w "$2" -t 20 -m -o "$WORKING_DIR"/subjack-http-output.txt -c "$HOME"/go/src/github.com/gy741/subjack/fingerprints.json;
+				"$SUBJACK" -d "$1" -w "$2" -t 20 -ssl -a -m -o "$WORKING_DIR"/subjack-https-output.txt -c "$HOME"/go/src/github.com/gy741/subjack/fingerprints.json;
+				"$SUBJACK" -d "$1" -w "$2" -t 20 -a -m -o "$WORKING_DIR"/subjack-http-output.txt -c "$HOME"/go/src/github.com/gy741/subjack/fingerprints.json;
 				cat "$WORKING_DIR"/subjack-https-output.txt "$WORKING_DIR"/subjack-http-output.txt | sort | uniq | grep -v -P "amazonaws.com|trafficmanager.net" >> ~/"$TARGET"-subjack-output.txt;
 				END=$(date +%s);
 				DIFF=$(( END - START ));
@@ -1918,8 +1918,8 @@ function run_subjack() {
 				echo -e "$GREEN""[i]$ORANGE It will run twice, once against HTTPS and once against HTTP.""$NC";
 				echo -e "$GREEN""[i]$ORANGE Command: subjack -d $1 -w $2 -v -t 20 -ssl -m -o $WORKING_DIR/subjack-output.txt""$NC";
 				START=$(date +%s);
-				"$SUBJACK" -d "$1" -w "$2" -t 20 -ssl -m -o "$WORKING_DIR"/subjack-https-output.txt -c "$HOME"/go/src/github.com/gy741/subjack/fingerprints.json;
-				"$SUBJACK" -d "$1" -w "$2" -t 20 -m -o "$WORKING_DIR"/subjack-http-output.txt -c "$HOME"/go/src/github.com/gy741/subjack/fingerprints.json;
+				"$SUBJACK" -d "$1" -w "$2" -t 20 -ssl -a -m -o "$WORKING_DIR"/subjack-https-output.txt -c "$HOME"/go/src/github.com/gy741/subjack/fingerprints.json;
+				"$SUBJACK" -d "$1" -w "$2" -t 20 -a -m -o "$WORKING_DIR"/subjack-http-output.txt -c "$HOME"/go/src/github.com/gy741/subjack/fingerprints.json;
 				cat "$WORKING_DIR"/subjack-https-output.txt "$WORKING_DIR"/subjack-http-output.txt | sort | uniq | grep -v -P "amazonaws.com|trafficmanager.net" >> ~/"$TARGET"-subjack-output.txt;
 				END=$(date +%s);
 				DIFF=$(( END - START ));
