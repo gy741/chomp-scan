@@ -788,6 +788,12 @@ function unique() {
 		mv "$WORKING_DIR"/temp3 "$WORKING_DIR"/$ALL_RESOLVED;
 }
 
+function list_found() {
+		unique;
+		echo -e "$GREEN""[+] Found $(wc -l "$WORKING_DIR"/$ALL_IP | awk '{print $1}') unique IPs so far.""$NC"
+		echo -e "$GREEN""[+] Found $(wc -l "$WORKING_DIR"/$ALL_DOMAIN | awk '{print $1}') unique discovered domains so far.""$NC"
+		echo -e "$GREEN""[+] Found $(wc -l "$WORKING_DIR"/$ALL_RESOLVED | awk '{print $1}') unique resolvable domains so far.""$NC"
+}
 
 function get_interesting() {
 		# Takes optional silent argument as $1
@@ -845,6 +851,7 @@ function run_dnscan() {
 
 		echo -e "$GREEN""[i]$BLUE dnsscan took $DIFF seconds to run.""$NC";
 		echo -e "$GREEN""[!]$ORANGE dnscan found $(wc -l "$WORKING_DIR"/dnscan-ips.txt | awk '{print $1}') IP/domain pairs.""$NC";
+		list_found;
 		sleep 1;
 
 		# Check if Ctrl+C was pressed and added to domain and IP files
@@ -873,6 +880,7 @@ function run_subfinder() {
 
 		echo -e "$GREEN""[i]$BLUE Subfinder took $DIFF seconds to run.""$NC";
 		echo -e "$GREEN""[!]$ORANGE Subfinder found $(wc -l "$WORKING_DIR"/subfinder-domains.txt | awk '{print $1}') domains.""$N";
+		list_found;
 		sleep 1;
 }
 
@@ -898,6 +906,7 @@ function run_sublist3r() {
 				echo -e "$GREEN""[!]$ORANGE sublist3r found $(wc -l "$WORKING_DIR"/sublist3r-output.txt | awk '{print $1}') domains.""$NC";
 		fi
 
+		list_found;
 		sleep 1;
 }
 
@@ -923,6 +932,7 @@ function run_knock() {
 		echo -e "$GREEN""[i]$BLUE knock took $DIFF seconds to run.""$NC";
 		echo -e "$GREEN""[!]$ORANGE knock found $(wc -l "$WORKING_DIR"/knock-tmp.txt | awk '{print $1}') domains.""$NC";
 
+		list_found;
 		sleep 1;
 		rm "$WORKING_DIR"/knock-tmp.txt;
 }
@@ -933,20 +943,19 @@ function run_amass() {
 		echo -e "$GREEN""[i]$BLUE Scanning $1 with amass.""$NC";
 		echo -e "$GREEN""[i]$ORANGE Command: amass -d $1 -w $2 -ip -rf resolvers.txt -active -o $WORKING_DIR/amass-output.txt -min-for-recursive 3 -bl $BLACKLIST""$NC";
 		START=$(date +%s);
-		"$AMASS" enum ---passive -d "$1" -o "$WORKING_DIR"/amass-passive-output.txt
+		# add passive mode
+		"$AMASS" enum --passive -d "$1" -o  "$WORKING_DIR"/amass-passive-output.txt
 		"$AMASS" enum -d "$1" -brute -w "$2" -ip -rf resolvers.txt -active -o "$WORKING_DIR"/amass-output.txt -min-for-recursive 3;
 		# 2019/07/06 "$AMASS" -d "$1" -ip -rf resolvers.txt -active -o "$WORKING_DIR"/amass-output.txt -min-for-recursive 3;
 		# "$AMASS" -d "$1" -brute -w "$2" -ip -rf resolvers.txt -active -o "$WORKING_DIR"/amass-output.txt -min-for-recursive 3 -bl "$BLACKLIST";
 		END=$(date +%s);
 		DIFF=$(( END - START ));
 		
-		# Check that output file exists amd parse output
+		# Check that passive output file exists amd parse output
 		if [[ -f "$WORKING_DIR"/amass-passive-output.txt ]]; then
 				# Cat output into main lists
-				cat "$WORKING_DIR"/amass-passive-output.txt >> "$WORKING_DIR"/"$ALL_DOMAIN";
-				cut -d ' ' -f 2 "$WORKING_DIR"/amass-output.txt >> "$WORKING_DIR"/"$ALL_IP";
+				cat "$WORKING_DIR"/amass-passive-output.txt >> "$WORKING_DIR"/$ALL_DOMAIN;
 				echo -e "$GREEN""[i]$BLUE amass passive took $DIFF seconds to run.""$NC";
-	
 		fi
 
 		# Check that output file exists amd parse output
@@ -958,6 +967,7 @@ function run_amass() {
 				echo -e "$GREEN""[!]$ORANGE amass found $(wc -l "$WORKING_DIR"/amass-output.txt | awk '{print $1}') domains.""$NC";
 		fi
 
+		list_found;
 		sleep 1;
 }
 
@@ -1030,6 +1040,7 @@ function run_massdns() {
 		echo -e "$GREEN""[!]$ORANGE Check $WORKING_DIR/massdns-CNAMEs.txt for a list of CNAMEs found.""$NC";
 		sleep 1;
 
+		list_found;
 		sleep 1;
 }
 
@@ -2479,6 +2490,7 @@ if [[ "$CONFIG_FILE" != "" ]]; then
 						fi
 
 						get_interesting;
+						list_found;
 
 						# Run rescope
 						if [[ "$ENABLE_RESCOPE" -eq 1 ]]; then
@@ -2772,6 +2784,7 @@ if [[ "$CONFIG_FILE" != "" ]]; then
 				fi
 
 				get_interesting;
+				list_found;
 
 				# Run rescope
 				if [[ "$ENABLE_RESCOPE" -eq 1 ]]; then
@@ -2867,6 +2880,7 @@ if [[ "$DEFAULT_MODE" -eq 1 ]]; then
 		run_gobuster "$DOMAIN" "$SMALL" "$WORKING_DIR"/"$ALL_RESOLVED";
 		run_dirsearch "$DOMAIN" "$SMALL" "$WORKING_DIR"/"$ALL_RESOLVED";
 		get_interesting;
+		list_found;
 		run_rescope;
 
 		# Calculate scan runtime
@@ -2900,6 +2914,7 @@ if [[ "$INTERACTIVE" -eq 1 ]]; then
 		run_information_gathering;
 		run_content_discovery;
 		get_interesting;
+		list_found;
 		run_rescope;
 
 		# Calculate scan runtime
@@ -3061,6 +3076,7 @@ if [[ "$PORTSCANNING" -eq 1 ]]; then
 fi
 
 get_interesting;
+list_found;
 
 # -r rescope
 if [[ "$ENABLE_RESCOPE" -eq 1 ]]; then
