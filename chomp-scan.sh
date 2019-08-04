@@ -933,11 +933,21 @@ function run_amass() {
 		echo -e "$GREEN""[i]$BLUE Scanning $1 with amass.""$NC";
 		echo -e "$GREEN""[i]$ORANGE Command: amass -d $1 -w $2 -ip -rf resolvers.txt -active -o $WORKING_DIR/amass-output.txt -min-for-recursive 3 -bl $BLACKLIST""$NC";
 		START=$(date +%s);
+		"$AMASS" enum ---passive -d "$1" -o "$WORKING_DIR"/amass-passive-output.txt
 		"$AMASS" enum -d "$1" -brute -w "$2" -ip -rf resolvers.txt -active -o "$WORKING_DIR"/amass-output.txt -min-for-recursive 3;
 		# 2019/07/06 "$AMASS" -d "$1" -ip -rf resolvers.txt -active -o "$WORKING_DIR"/amass-output.txt -min-for-recursive 3;
 		# "$AMASS" -d "$1" -brute -w "$2" -ip -rf resolvers.txt -active -o "$WORKING_DIR"/amass-output.txt -min-for-recursive 3 -bl "$BLACKLIST";
 		END=$(date +%s);
 		DIFF=$(( END - START ));
+		
+		# Check that output file exists amd parse output
+		if [[ -f "$WORKING_DIR"/amass-passive-output.txt ]]; then
+				# Cat output into main lists
+				cat "$WORKING_DIR"/amass-passive-output.txt >> "$WORKING_DIR"/"$ALL_DOMAIN";
+				cut -d ' ' -f 2 "$WORKING_DIR"/amass-output.txt >> "$WORKING_DIR"/"$ALL_IP";
+				echo -e "$GREEN""[i]$BLUE amass passive took $DIFF seconds to run.""$NC";
+	
+		fi
 
 		# Check that output file exists amd parse output
 		if [[ -f "$WORKING_DIR"/amass-output.txt ]]; then
