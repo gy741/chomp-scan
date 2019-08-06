@@ -72,6 +72,7 @@ ALL_IP=all_discovered_ips.txt;
 ALL_DOMAIN=all_discovered_domains.txt;
 ALL_RESOLVED=all_resolved_domains.txt;
 ALL_OVERLAP=all_del_overlap_domains.txt;
+ALL_SUBJACK=all_subjack_domains.txt;
 
 # upload setting
 TARGET=$(cat /etc/hostname);
@@ -1033,8 +1034,17 @@ function run_massdns() {
 
 		# Add all resolved domains to resolved domain list
 		grep -v CNAME "$WORKING_DIR"/massdns-result.txt | cut -d ' ' -f 1 >> "$WORKING_DIR"/"$ALL_RESOLVED";
+		
+		
+		#subjack only 
+		grep "CNAME" massdns-result.txt  | cut -d ' ' -f 1 >> "$WORKING_DIR"/"$ALL_SUBJACK";
+		grep "A" massdns-result.txt | grep -E "125.209.214.79|185.203.72.17" | cut -d ' ' -f 1 >> "$WORKING_DIR"/"$ALL_SUBJACK";
+
+		
+		
 		# Remove trailing periods from results
-		sed -i 's/\.$//' "$WORKING_DIR"/"$ALL_RESOLVED";
+		sed -i 's/\.$//' "$WORKING_DIR"/"$ALL_SUBJACK";
+		sed -i 's/\.$//' "$WORKING_DIR"/"$ALL_SUBJACK";
 
 		echo -e "$GREEN""[i]$BLUE Massdns took $DIFF seconds to run.""$NC";
 		echo -e "$GREEN""[!]$ORANGE Check $WORKING_DIR/massdns-CNAMEs.txt for a list of CNAMEs found.""$NC";
@@ -2007,7 +2017,7 @@ while true; do
 				   read -rp "[i] Enter S/M/L/X/2 " CHOICE;
 				   case $CHOICE in
 						   [sS]* )
-								   run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
+								   run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_SUBJACK";
 								   run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_OVERLAP";
 								   run_s3scanner "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 								   run_bfac "$WORKING_DIR"/"$ALL_RESOLVED";
@@ -2017,7 +2027,7 @@ while true; do
 								   break;
 								   ;;
 							[mM]* )
-								   run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
+								   run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_SUBJACK";
 								   run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_OVERLAP";
 								   run_s3scanner "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 								   run_bfac "$WORKING_DIR"/"$ALL_RESOLVED";
@@ -2027,7 +2037,7 @@ while true; do
 								   break;
 								   ;;
 							[lL]* )
-								   run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
+								   run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_SUBJACK";
 								   run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_OVERLAP";
 								   run_s3scanner "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 								   run_bfac "$WORKING_DIR"/"$ALL_RESOLVED";
@@ -2037,7 +2047,7 @@ while true; do
 								   break;
 								   ;;
 							[xX]* )
-								   run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
+								   run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_SUBJACK";
 								   run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_OVERLAP";
 								   run_s3scanner "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 								   run_bfac "$WORKING_DIR"/"$ALL_RESOLVED";
@@ -2047,7 +2057,7 @@ while true; do
 								   break;
 								   ;;
 							[2]* )
-								   run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
+								   run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_SUBJACK";
 								   run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_OVERLAP";
 								   run_s3scanner "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 								   run_bfac "$WORKING_DIR"/"$ALL_RESOLVED";
@@ -2203,6 +2213,7 @@ if [[ "$CONFIG_FILE" != "" ]]; then
 								touch "$WORKING_DIR"/"$ALL_IP";
 								touch "$WORKING_DIR"/"$ALL_RESOLVED";
 								touch "$WORKING_DIR"/"$ALL_OVERLAP";
+								touch "$WORKING_DIR"/"$ALL_SUBJACK";
 						else
 								WORKING_DIR="$CUSTOM_WORKING_DIR"/"$ARRAY_DOMAIN"-$(date +%T);
 								mkdir -p "$WORKING_DIR";
@@ -2212,6 +2223,7 @@ if [[ "$CONFIG_FILE" != "" ]]; then
 								touch "$WORKING_DIR"/"$ALL_IP";
 								touch "$WORKING_DIR"/"$ALL_RESOLVED";
 								touch "$WORKING_DIR"/"$ALL_OVERLAP";
+								touch "$WORKING_DIR"/"$ALL_SUBJACK";
 						fi
 						SCAN_START=$(date +%s);
 						echo "$ARRAY_DOMAIN";
@@ -2286,12 +2298,12 @@ if [[ "$CONFIG_FILE" != "" ]]; then
 						# Run subjack
 						if [[ "$ENABLE_SUBJACK" -eq 1 ]]; then
 								if [[ "$USE_ALL" -eq 1 ]]; then
-										run_subjack "$ARRAY_DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
+										run_subjack "$ARRAY_DOMAIN" "$WORKING_DIR"/"$ALL_SUBJACK";
 								# Make sure there are interesting domains
 								elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
-										run_subjack "$ARRAY_DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
+										run_subjack "$ARRAY_DOMAIN" "$WORKING_DIR"/"$ALL_SUBJACK";
 								else
-										run_subjack "$ARRAY_DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
+										run_subjack "$ARRAY_DOMAIN" "$WORKING_DIR"/"$ALL_SUBJACK";
 								fi
 						fi
 						
@@ -2589,12 +2601,12 @@ if [[ "$CONFIG_FILE" != "" ]]; then
 				# Run subjack
 				if [[ "$ENABLE_SUBJACK" -eq 1 ]]; then
 						if [[ "$USE_ALL" -eq 1 ]]; then
-								run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
+								run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_SUBJACK";
 						# Make sure there are interesting domains
 						elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
-								run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
+								run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_SUBJACK";
 						else
-								run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
+								run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_SUBJACK";
 						fi
 				fi
 
@@ -2867,7 +2879,7 @@ if [[ "$DEFAULT_MODE" -eq 1 ]]; then
 		run_aquatone "default";
 		run_masscan;
 		run_nmap;
-		run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_DOMAIN";
+		run_subjack "$DOMAIN" "$WORKING_DIR"/"$ALL_SUBJACK";
 		run_corstest "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 		run_s3scanner "$DOMAIN" "$WORKING_DIR"/"$ALL_RESOLVED";
 		run_bfac "$WORKING_DIR"/"$ALL_RESOLVED";
