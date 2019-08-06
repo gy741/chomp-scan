@@ -245,7 +245,7 @@ function install_amass() {
 		echo -e "$GREEN""Installing amass 3.0.16 from Github.""$NC";
 		wget https://github.com/OWASP/Amass/releases/download/v3.0.27/amass_v3.0.27_linux_amd64.zip -O "$TOOLS"/amass.zip;
 		unzip -o "$TOOLS"/amass.zip -d "$TOOLS";
-		mv "$TOOLS"/amass_3.0.27_linux_amd64 "$TOOLS"/amass;
+		mv "$TOOLS"/amass_v3.0.27_linux_amd64 "$TOOLS"/amass;
 		rm "$TOOLS"/amass.zip;
 }
 
