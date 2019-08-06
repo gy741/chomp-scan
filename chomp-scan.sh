@@ -1037,13 +1037,13 @@ function run_massdns() {
 		
 		
 		#subjack only 
-		grep "CNAME" massdns-result.txt  | cut -d ' ' -f 1 >> "$WORKING_DIR"/"$ALL_SUBJACK";
-		grep "A" massdns-result.txt | grep -E "125.209.214.79|185.203.72.17" | cut -d ' ' -f 1 >> "$WORKING_DIR"/"$ALL_SUBJACK";
+		grep "CNAME" "$WORKING_DIR"/massdns-result.txt  | cut -d ' ' -f 1 >> "$WORKING_DIR"/"$ALL_SUBJACK";
+		grep "A" "$WORKING_DIR"/massdns-result.txt | grep -E "125.209.214.79|185.203.72.17" | cut -d ' ' -f 1 >> "$WORKING_DIR"/"$ALL_SUBJACK";
 
 		
 		
 		# Remove trailing periods from results
-		sed -i 's/\.$//' "$WORKING_DIR"/"$ALL_SUBJACK";
+		sed -i 's/\.$//' "$WORKING_DIR"/"$ALL_DOMAIN";
 		sed -i 's/\.$//' "$WORKING_DIR"/"$ALL_SUBJACK";
 
 		echo -e "$GREEN""[i]$BLUE Massdns took $DIFF seconds to run.""$NC";
