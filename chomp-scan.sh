@@ -945,7 +945,7 @@ function run_amass() {
 		START=$(date +%s);
 		# add passive mode
 		"$AMASS" enum --passive -d "$1" -o  "$WORKING_DIR"/amass-passive-output.txt
-		"$AMASS" enum -d "$1" -brute -w "$2" -ip -rf resolvers.txt -active -o "$WORKING_DIR"/amass-output.txt -min-for-recursive 3;
+		# 2019/08/06 "$AMASS" enum -d "$1" -brute -w "$2" -ip -rf resolvers.txt -active -o "$WORKING_DIR"/amass-output.txt -min-for-recursive 3;
 		# 2019/07/06 "$AMASS" -d "$1" -ip -rf resolvers.txt -active -o "$WORKING_DIR"/amass-output.txt -min-for-recursive 3;
 		# "$AMASS" -d "$1" -brute -w "$2" -ip -rf resolvers.txt -active -o "$WORKING_DIR"/amass-output.txt -min-for-recursive 3 -bl "$BLACKLIST";
 		END=$(date +%s);
