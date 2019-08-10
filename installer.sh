@@ -29,6 +29,7 @@ function install_kali() {
 		install_knockpy;
 		install_go;
 		install_go_tools;
+		install_trusttrees;
 }
 function install_debian() {
 		echo -e "$GREEN""Installing for Debian.""$NC";
@@ -49,6 +50,7 @@ function install_debian() {
 		install_knockpy;
 		install_go;
 		install_go_tools;
+		install_trusttrees;
 }
 function install_ubuntu() {
 		echo -e "$GREEN""Installing for Ubuntu.""$NC";
@@ -67,6 +69,7 @@ function install_ubuntu() {
 		install_knockpy;
 		install_go;
 		install_go_tools;
+		install_trusttrees;
 }
 
 function install_pip() {
@@ -247,6 +250,18 @@ function install_amass() {
 		unzip -o "$TOOLS"/amass.zip -d "$TOOLS";
 		mv "$TOOLS"/amass_v3.0.27_linux_amd64 "$TOOLS"/amass;
 		rm "$TOOLS"/amass.zip;
+}
+
+function install_trusttrees() {
+		if [[ -d "$TOOLS"/TrustTrees ]]; then
+				echo -e "$GREEN""Updating trusttrees.""$NC";
+				cd "$TOOLS"/TrustTrees;
+				git pull;
+				cd -;
+		else
+		echo -e "$GREEN""Installing TrustTrees from Github.""$NC";
+		https://github.com/gy741/TrustTrees.git "$TOOLS"/TrustTrees;
+		fi
 }
 
 # Check for custom path
