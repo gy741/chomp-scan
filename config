@@ -40,6 +40,8 @@ INTERESTING=
 TOOL_PATH=
 # Enable parsing resolved domains into a Burp-formatted JSON file
 ENABLE_RESCOPE=
+# Enable parsing resolved domains into a Burp-formatted JSON file
+ENABLE_TRUSTTRESS=YES
 
 
 [subdomain enumeration]
