@@ -66,6 +66,7 @@ ENABLE_NMAP=0;
 ENABLE_SCREENSHOTS=0;
 ENABLE_RESCOPE=0;
 ENABLE_KNOCK=0;
+ENABLE_TRUSTTRESS=0;
 
 # Other variables
 ALL_IP=all_discovered_ips.txt;
@@ -110,6 +111,7 @@ function set_tool_paths() {
 				CORSTEST=$TOOL_PATH/CORStest/corstest.py;
 				S3SCANNER=$TOOL_PATH/S3Scanner/s3scanner.py;
 				AMASS=$TOOL_PATH/amass/amass;
+				TRUSTTRESS=$TOOL_PATH/TrustTrees/trusttrees.py;
 		else
 				return;
 		fi
@@ -286,6 +288,10 @@ function parse_config() {
 
 		if [[ $(grep '^ENABLE_RESCOPE' "$CONFIG_FILE" | cut -d '=' -f 2) == "YES" ]]; then
 				ENABLE_RESCOPE=1;
+		fi
+		
+		if [[ $(grep '^ENABLE_TRUSTTRESS' "$CONFIG_FILE" | cut -d '=' -f 2) == "YES" ]]; then
+				ENABLE_TRUSTTRESS=1;
 		fi
 
 		# Parse [subdomain enumeration]
@@ -1051,6 +1057,19 @@ function run_massdns() {
 		sleep 1;
 
 		list_found;
+		sleep 1;
+}
+
+function run_trusttress() {
+		# Run trusttress with found subdomains
+
+		echo -e "$GREEN""[i]$BLUE Running TrustTrees""$NC";
+		START=$(date +%s);
+		"$TRUSTTRESS" -x pdf -l "$WORKING_DIR"/$ALL_DOMAIN;
+		END=$(date +%s);
+		DIFF=$(( END - START ));
+
+		echo -e "$GREEN""[i]$BLUE TrustTrees took $DIFF seconds to run.""$NC";
 		sleep 1;
 }
 
@@ -2272,6 +2291,14 @@ if [[ "$CONFIG_FILE" != "" ]]; then
 										run_amass "$ARRAY_DOMAIN" "$SHORT";
 								fi
 						fi
+						
+						
+						# Run TrustTrees
+						if [[ "$ENABLE_TRUSTTRESS" -eq 1 ]]; then
+								# Check if $SUBDOMAIN_WORDLIST is set, else use short as default
+								run_trusttress;
+			
+						fi
 
 						# Run masscan and/or goaltdns
 						if [[ "$ENABLE_MASSDNS" -eq 1 ]]; then # Masscan will always run in order to get resolved domains
@@ -2298,7 +2325,7 @@ if [[ "$CONFIG_FILE" != "" ]]; then
 						# Run subjack
 						if [[ "$ENABLE_SUBJACK" -eq 1 ]]; then
 								if [[ "$USE_ALL" -eq 1 ]]; then
-										run_subjack "$ARRAY_DOMAIN" "$WORKING_DIR"/"$ALL_SUBJACK";
+										  "$ARRAY_DOMAIN" "$WORKING_DIR"/"$ALL_SUBJACK";
 								# Make sure there are interesting domains
 								elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
 										run_subjack "$ARRAY_DOMAIN" "$WORKING_DIR"/"$ALL_SUBJACK";
@@ -2568,6 +2595,11 @@ if [[ "$CONFIG_FILE" != "" ]]; then
 						else
 								run_amass "$DOMAIN" "$SHORT";
 						fi
+				fi
+				
+				if [[ "$ENABLE_TRUSTTRESS" -eq 1 ]]; then
+						# Check if $SUBDOMAIN_WORDLIST is set, else use short as default
+						run_trusttress;
 				fi
 
 				# Run masscan and/or goaltdns
