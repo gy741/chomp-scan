@@ -260,7 +260,7 @@ function install_trusttrees() {
 				cd -;
 		else
 		echo -e "$GREEN""Installing TrustTrees from Github.""$NC";
-		https://github.com/gy741/TrustTrees.git "$TOOLS"/TrustTrees;
+		git clone https://github.com/gy741/TrustTrees.git "$TOOLS"/TrustTrees;
 		fi
 }
 
