@@ -999,16 +999,20 @@ function run_massdns() {
 		# Check if being called without goaltdns
 		if [[ "$3" == "alone" ]]; then
 				# Create wordlist with appended domain for massdns
-				sed "/.*/ s/$/\.$1/" $2 > "$WORKING_DIR"/massdns-appended.txt;
 
 				echo -e "$GREEN""[i]$BLUE Scanning $(cat "$WORKING_DIR"/$ALL_DOMAIN "$WORKING_DIR"/$ALL_IP "$WORKING_DIR"/massdns-appended.txt | sort | uniq | wc -l) current unique $1 domains with massdns (in quiet mode).""$NC";
 				echo -e "$GREEN""[i]$ORANGE Command: cat (all found domains and IPs) | $MASSDNS_BIN -r $MASSDNS_RESOLVERS -q -t A -o S -w $WORKING_DIR/massdns-result.txt.""$NC";
 				START=$(date +%s);
-				cat "$WORKING_DIR"/$ALL_DOMAIN "$WORKING_DIR"/$ALL_IP "$WORKING_DIR"/massdns-appended.txt | sort | uniq | $MASSDNS_BIN -r $MASSDNS_RESOLVERS -q -t A -o S -w "$WORKING_DIR"/massdns-result.txt;
+				cat "$WORKING_DIR"/$ALL_DOMAIN  | sort | uniq | $MASSDNS_BIN -r $MASSDNS_RESOLVERS -q -t A -o Sqr -w "$WORKING_DIR"/trust-massdns-output.txt;
+
 				# $MASSDNS_BRUTE $BRUTE $1 | $MASSDNS_BIN -r $MASSDNS_RESOLVERS -t A -o S -w "$WORKING_DIR"/massdns_brute_output.txt; 
 				# cat "$WORKING_DIR"/massdns_brute_output.txt >> "$WORKING_DIR"/massdns-result.txt;
 				END=$(date +%s);
 				DIFF=$(( END - START ));
+				# Remove trailing periods from results
+				cp "$WORKING_DIR"/trust-massdns-output.txt  "$WORKING_DIR"/back-trust-tree.txt;
+				cat "$WORKING_DIR"/trust-massdns-output.txt |  grep -E "SERVFAIL|REFUSED" | awk '{print $4}' | sed  's/\.$//' > "$WORKING_DIR"/test-trust.txt;
+               			mv "$WORKING_DIR"/test-trust.txt "$WORKING_DIR"/trust-massdns-output.txt;
 		else
 				# Run goaltdns to get altered domains to resolve along with other discovered domains
 				run_goaltdns;
@@ -1065,7 +1069,7 @@ function run_trusttress() {
 
 		echo -e "$GREEN""[i]$BLUE Running TrustTrees""$NC";
 		START=$(date +%s);
-		"$TRUSTTRESS" -x pdf -l "$WORKING_DIR"/$ALL_DOMAIN;
+		"$TRUSTTRESS" --gandi-api-v5-key zFfbfXjzDhkwG9EYK0fYBfXN -x pdf -l "$WORKING_DIR"/trust-massdns-output.txt;
 		END=$(date +%s);
 		DIFF=$(( END - START ));
 
@@ -2293,12 +2297,6 @@ if [[ "$CONFIG_FILE" != "" ]]; then
 						fi
 						
 						
-						# Run TrustTrees
-						if [[ "$ENABLE_TRUSTTRESS" -eq 1 ]]; then
-								# Check if $SUBDOMAIN_WORDLIST is set, else use short as default
-								run_trusttress;
-			
-						fi
 
 						# Run masscan and/or goaltdns
 						if [[ "$ENABLE_MASSDNS" -eq 1 ]]; then # Masscan will always run in order to get resolved domains
@@ -2318,6 +2316,14 @@ if [[ "$CONFIG_FILE" != "" ]]; then
 										fi
 								fi
 						fi
+
+						                                               # Run TrustTrees
+                                                if [[ "$ENABLE_TRUSTTRESS" -eq 1 ]]; then
+                                                                # Check if $SUBDOMAIN_WORDLIST is set, else use short as default
+                                                                run_trusttress;
+
+                                                fi
+
 
 						get_interesting "silent";
 
