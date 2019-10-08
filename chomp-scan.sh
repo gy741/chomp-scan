@@ -2332,7 +2332,7 @@ if [[ "$CONFIG_FILE" != "" ]]; then
 						# Run subjack
 						if [[ "$ENABLE_SUBJACK" -eq 1 ]]; then
 								if [[ "$USE_ALL" -eq 1 ]]; then
-										  "$ARRAY_DOMAIN" "$WORKING_DIR"/"$ALL_SUBJACK";
+										run_subjack "$ARRAY_DOMAIN" "$WORKING_DIR"/"$ALL_SUBJACK";
 								# Make sure there are interesting domains
 								elif [[ $(wc -l "$WORKING_DIR"/"$INTERESTING_DOMAINS" | awk '{print $1}') -gt 0 ]]; then
 										run_subjack "$ARRAY_DOMAIN" "$WORKING_DIR"/"$ALL_SUBJACK";
