@@ -55,7 +55,7 @@ function install_debian() {
 function install_ubuntu() {
 		echo -e "$GREEN""Installing for Ubuntu.""$NC";
 		sudo apt-get update;
-		sudo apt-get install git wget curl nmap masscan nikto whatweb wafw00f chromium-browser python-pip python3-pip p7zip-full unzip python-dev python-setuptools python3-dev python3-setuptools graphviz graphviz-dev libgraphviz-dev graphviz-dev pkg-config -y;
+		sudo apt-get install python-pygraphviz git wget curl nmap masscan nikto whatweb wafw00f chromium-browser python-pip python3-pip p7zip-full unzip python-dev python-setuptools python3-dev python3-setuptools graphviz graphviz-dev libgraphviz-dev graphviz-dev pkg-config -y;
 		install_pip;
 		install_dnscan;
 		install_bfac;
