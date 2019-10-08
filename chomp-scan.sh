@@ -999,6 +999,7 @@ function run_massdns() {
 		# Check if being called without goaltdns
 		if [[ "$3" == "alone" ]]; then
 				# Create wordlist with appended domain for massdns
+				sed "/.*/ s/$/\.$1/" $2 > "$WORKING_DIR"/massdns-appended.txt;
 
 				echo -e "$GREEN""[i]$BLUE Scanning $(cat "$WORKING_DIR"/$ALL_DOMAIN "$WORKING_DIR"/$ALL_IP "$WORKING_DIR"/massdns-appended.txt | sort | uniq | wc -l) current unique $1 domains with massdns (in quiet mode).""$NC";
 				echo -e "$GREEN""[i]$ORANGE Command: cat (all found domains and IPs) | $MASSDNS_BIN -r $MASSDNS_RESOLVERS -q -t A -o S -w $WORKING_DIR/massdns-result.txt.""$NC";
