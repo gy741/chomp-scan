@@ -21,6 +21,12 @@
 
 #dvp bugbounty
 
+# feixiaohao.com top 30
+
+# huobi.vn,huobi.co,binance.com,binance-cn.com,coinbase.com,okex.com,okex.me,zb.com,zb.plus,bitfinex.com,bitflyer.jp,bittrex.com,bitstamp.net,hitbtc.com,kraken.com,upbit.com,bithumb.com,liquid.com,mxc.com,biki.com,bitget.cc,bibox.com,idax.pro,zg.com,bitz.top,poloniex.com,zbg.com,bkex.vip,coinw.ai,tokencan.net,gemini.com,cointiger.com,gateio.news,gate.io
+
+
+
 
 [general]
 # Set domain to scan (required). Do not include a scheme, e.g. https:// or http://. Chomp Scan will add the appropriate scheme as needed.
