@@ -8,7 +8,6 @@ confluence
 /pages/viewpage.action
 dashboard.action
 /wls-wsat/CoordinatorPortType
-filetype:action
 _async/AsyncResponseServiceHttps
 /console/login/LoginForm.jsp
 invoker/JMXInvokerServlet
